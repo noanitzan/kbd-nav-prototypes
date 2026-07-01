@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harmony Editor — main screen: keyboard operability (buttons around the stage)</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Helvetica Neue", Arial, sans-serif; background: #EDEEF0; color: #20303C; display: flex; gap: 18px; padding: 18px; align-items: flex-start; }
+
+  /* ---------- Sidebar (the spec) ---------- */
+  .kbd-sidebar { flex: 0 0 300px; display: flex; flex-direction: column; gap: 14px; position: sticky; top: 18px; max-height: calc(100vh - 36px); overflow: auto; }
+  .kbd-card { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+  .kbd-card h2 { margin: 0 0 10px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #868AA5; }
+  .focus-now { text-align: center; padding: 4px 0; }
+  .fn-role { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; background: #E6F0FF; color: #116DFF; }
+  .fn-role.menu { background: #EDE6FF; color: #6B3FD4; }
+  .fn-role.idle { background: #F0F1F3; color: #868AA5; }
+  .fn-name { font-size: 15px; font-weight: 700; margin-top: 8px; }
+  .fn-hint { font-size: 12px; color: #868AA5; margin-top: 4px; min-height: 15px; }
+  .kbd-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 12px; }
+  .legend-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 12.5px; }
+  .badge-demo { width: 20px; height: 20px; border-radius: 50%; flex: 0 0 auto; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .badge-demo.b { background: #116DFF; } .badge-demo.g { background: #0B8043; }
+  .keymap { font-size: 12.5px; line-height: 1.7; }
+  .keymap kbd { background: #F0F1F3; border: 1px solid #D9DBE1; border-radius: 4px; padding: 1px 6px; font-family: inherit; font-size: 11px; }
+  #kbd-log { font-size: 12px; line-height: 1.5; max-height: 190px; overflow-y: auto; }
+  #kbd-log .log-empty { color: #B6B9C4; font-style: italic; }
+  #kbd-log div { padding: 2px 0; border-bottom: 1px solid #F2F3F5; }
+  .log-key { font-weight: 700; color: #116DFF; }
+  details.notes summary { font-size: 12px; font-weight: 700; color: #116DFF; cursor: pointer; }
+  details.notes p, details.notes li { font-size: 12px; color: #50607A; line-height: 1.5; }
+  details.notes ul { margin: 6px 0; padding-left: 18px; }
+
+  /* ---------- Editor replica ---------- */
+  .app { flex: 1; background: #fff; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.14); overflow: hidden; min-width: 0; }
+
+  /* focus ring for every real control */
+  .app :focus-visible, .menu :focus-visible { outline: 3px solid #116DFF; outline-offset: 1px; border-radius: 8px; }
+  .app [aria-expanded="true"] { background: #EDE6FF !important; color: #6B3FD4 !important; }
+
+  .chrome { display: flex; align-items: center; gap: 4px; padding: 8px 14px; border-bottom: 1px solid #EEF0F2; }
+  .chrome .logo { font-weight: 800; letter-spacing: .02em; }
+  .chrome .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg,#8EC5FC,#E0C3FC); border: 0; cursor: pointer; }
+  .spacer { flex: 1; }
+  .cbtn { background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 600; color: #20303C; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; font-family: inherit; text-decoration: none; }
+  .cbtn:hover { background: #F3F4F6; }
+  .cbtn.icon { padding: 6px 8px; font-size: 15px; }
+  .cbtn.pri { background: #116DFF; color: #fff; padding: 7px 16px; border-radius: 20px; }
+  .cbtn.pri:hover { background: #0F5EDB; }
+  .cbtn.ghost { color: #116DFF; }
+
+  .toolbar2 { display: flex; align-items: center; gap: 4px; padding: 8px 14px; border-bottom: 1px solid #EEF0F2; justify-content: center; position: relative; }
+  .addbtn-wrap { position: absolute; left: 14px; top: 7px; }
+  .sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 8px; }
+
+  .frame { position: relative; margin: 16px; border: 1px solid #E3E5E9; border-radius: 12px; min-height: 520px; display: flex; flex-direction: column; }
+  .framebar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF0F2; background: #F7F8F9; border-radius: 12px 12px 0 0; }
+  .dots { color: #C7CBD4; letter-spacing: 2px; }
+  .url { flex: 1; text-align: center; font-size: 12px; color: #868AA5; }
+  .device { display: inline-flex; gap: 2px; }
+  .dtoggle { border: 1px solid transparent; background: transparent; border-radius: 7px; padding: 4px 7px; cursor: pointer; font-size: 14px; }
+  .dtoggle[aria-pressed="true"] { background: #E6F0FF; color: #116DFF; }
+
+  .canvas { flex: 1; display: flex; }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 6px; border-right: 1px solid #EEF0F2; }
+  .rbtn { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; color: #50607A; }
+  .rbtn:hover { background: #F3F4F6; }
+  .stage { flex: 1; position: relative; padding: 26px; }
+  .section-box { border: 2px solid #116DFF; border-radius: 8px; min-height: 380px; position: relative; }
+  .section-tag { position: absolute; top: 8px; left: 8px; background: #116DFF; color: #fff; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+  .add-section { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: #116DFF; color: #fff; border: 0; border-radius: 20px; padding: 8px 16px; font-weight: 600; font-size: 13px; cursor: pointer; display: inline-flex; gap: 6px; z-index: 5; }
+  .stage-note { position: absolute; left: 0; right: 0; bottom: 34px; text-align: center; color: #B6B9C4; font-size: 13px; pointer-events: none; padding: 0 20px; }
+  .section-box.entered { box-shadow: inset 0 0 0 3px rgba(17,109,255,.4); }
+  /* Elements on the stage — the inner Tab stops inside the section */
+  .els { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
+  .stage-el { border: 2px solid transparent; border-radius: 10px; padding: 10px 18px; background: transparent; cursor: pointer; font-size: 16px; font-family: inherit; color: #20303C; }
+  .stage-el.heading { font-size: 26px; font-weight: 800; }
+  .stage-el.button { background: #116DFF; color: #fff; border-radius: 22px; font-weight: 600; }
+  .stage-el.image { font-size: 15px; }
+  .stage-el.selected { border-color: #116DFF; box-shadow: 0 0 0 4px rgba(17,109,255,.18); }
+  /* "The relevant menu above" — element action bar, docked at the top of the section */
+  .el-actionbar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: #1D2230; color: #fff; border-radius: 10px; padding: 5px 6px; box-shadow: 0 8px 24px rgba(0,0,0,.28); z-index: 7; white-space: nowrap; }
+  .el-actionbar[hidden] { display: none; }
+  .el-actionbar .eabtn { background: transparent; border: 0; color: #E7EAF3; font-size: 13px; padding: 6px 10px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .el-actionbar .eatype { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #9AA6C7; padding: 0 8px 0 4px; }
+  /* Floating small menu, anchored to the selected element */
+  .el-floatmenu { position: absolute; display: flex; gap: 2px; background: #fff; border: 1px solid #E3E5E9; border-radius: 10px; padding: 4px 5px; box-shadow: 0 6px 18px rgba(0,0,0,.16); z-index: 8; }
+  .el-floatmenu[hidden] { display: none; }
+  .el-floatmenu .fmbtn { background: transparent; border: 0; font-size: 14px; padding: 5px 8px; border-radius: 7px; cursor: pointer; }
+  /* Section's own floating panel (top-right) — shown while the Section is selected,
+     hidden the moment an element inside is selected. */
+  .sec-panel { position: absolute; top: 8px; right: 8px; display: flex; align-items: center; gap: 4px; background: #fff; border: 1px solid #E3E5E9; border-radius: 12px; padding: 5px 6px; box-shadow: 0 6px 18px rgba(0,0,0,.14); z-index: 6; }
+  .sec-panel[hidden] { display: none; }
+  .sec-panel .sp-sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 4px; }
+  .sec-panel .rbtn { width: 30px; height: 30px; }
+  .floattools { position: absolute; left: -46px; bottom: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .askaria-float { position: absolute; right: 14px; bottom: 14px; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
+
+  /* ---------- Menus (APG Menu) ---------- */
+  .menu { position: absolute; z-index: 500; min-width: 190px; background: #1D2230; color: #E7EAF3; border-radius: 10px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
+  .menu.show { display: block; }
+  .menu [role^="menuitem"] { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 7px; font-size: 13px; cursor: pointer; border: 0; background: transparent; color: inherit; width: 100%; text-align: left; font-family: inherit; }
+  .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus-visible { background: #2C3346; outline: none; }
+  .menu [role="menuitemradio"][aria-checked="true"]::after { content: "✓"; color: #6BA4FF; }
+  .menu .mi-check { width: 14px; }
+
+  /* ---------- Tab-order badges ---------- */
+  .kbd-badge { position: absolute; z-index: 450; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 10px; color: #fff; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.3); transform: translate(-40%,-40%); }
+  .kbd-badge.b { background: #116DFF; } .kbd-badge.g { background: #0B8043; }
+  body.no-badges .kbd-badge { display: none; }
+
+  /* Tooltip — must appear on keyboard FOCUS, not just hover (WCAG 1.4.13). */
+  .kbd-tip { position: absolute; z-index: 1500; background: #1D2230; color: #fff; font-size: 12px; padding: 5px 9px; border-radius: 6px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.3); display: none; }
+  .kbd-tip.show { display: block; }
+  .kbd-tip::after { content: ""; position: absolute; top: -4px; left: 12px; width: 8px; height: 8px; background: #1D2230; transform: rotate(45deg); }
+  .kbd-tip.left::after { top: 50%; left: -4px; margin-top: -4px; }
+
+  .kbd-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1D2D3E; color: #fff; padding: 12px 18px; border-radius: 10px; max-width: 560px; font-size: 14px; opacity: 0; transition: opacity .2s, transform .2s; z-index: 2000; box-shadow: 0 8px 30px rgba(0,0,0,.3); }
+  .kbd-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .kbd-toast-label { display: block; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #6BA4FF; margin-bottom: 3px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+  <aside class="kbd-sidebar">
+    <div class="kbd-card">
+      <h2>Harmony editor — keyboard (chrome)</h2>
+      <div class="focus-now">
+        <span class="fn-role idle" id="fn-role">No focus</span>
+        <div class="fn-name" id="fn-name">Press Tab to enter the editor</div>
+        <div class="fn-hint" id="fn-hint">Top bar = individual Tab stops · other clusters = arrow toolbars</div>
+      </div>
+      <label class="kbd-toggle"><input type="checkbox" id="badge-toggle" checked> Show Tab-order badges</label>
+    </div>
+
+    <div class="kbd-card">
+      <h2>Badges</h2>
+      <div class="legend-row"><span class="badge-demo b">1</span> Blue = a <strong>Tab stop</strong> (Tab reaches it)</div>
+      <div class="legend-row"><span class="badge-demo g">1b</span> Green = <strong>Arrow-reachable</strong> inside a toolbar</div>
+    </div>
+
+    <div class="kbd-card">
+      <h2>Keys</h2>
+      <div class="keymap">
+        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> — next / previous <strong>Tab stop</strong> (a toolbar counts as one)</div>
+        <div><kbd>←</kbd> <kbd>→</kbd> — move within a horizontal toolbar</div>
+        <div><kbd>↑</kbd> <kbd>↓</kbd> — move within a vertical toolbar / a menu</div>
+        <div><kbd>Home</kbd> <kbd>End</kbd> — first / last control in a toolbar or menu</div>
+        <div><kbd>Enter</kbd> <kbd>Space</kbd> <kbd>↓</kbd> — open a ▾ menu (focus first item)</div>
+        <div><kbd>↑</kbd> (on a ▾ button) — open its menu at the last item</div>
+        <div><kbd>Esc</kbd> — close the menu, focus returns to the button</div>
+        <div><kbd>Enter</kbd> (in a menu) — run the item, close, return focus</div>
+        <div><kbd>Enter</kbd> (on the <strong>Section</strong>) — edit inside: focus moves to the first element</div>
+        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> (inside) — move between the elements (trapped in the section)</div>
+        <div><kbd>Enter</kbd> (on an <strong>element</strong>) — select it: opens its <strong>action bar above</strong> + a <strong>floating menu</strong> on it</div>
+        <div><kbd>Esc</kbd> — deselect the element (close its bars); again → exit the section</div>
+      </div>
+    </div>
+
+    <div class="kbd-card">
+      <h2>Last actions</h2>
+      <div id="kbd-log"><div class="log-empty">Key presses will be narrated here…</div></div>
+    </div>
+
+    <div class="kbd-card">
+      <details class="notes">
+        <summary>Focus-management &amp; WCAG 2.2 AA notes</summary>
+        <ul>
+          <li><strong>Top app bar = individual Tab stops.</strong> Every top-bar control (WIX, account, site, Brand, zoom, Upgrade, Undo, Redo, Save, Preview, Publish) is its own Tab stop — Tab moves between them, no arrow keys. A top bar of top-level controls reads better as discrete Tab stops than as one roving toolbar — <code>2.4.3 Focus Order</code>.</li>
+          <li><strong>Two clusters ARE toolbars — one Tab stop (roving tabindex):</strong> the section-actions bar and the left rail. Tab in once, arrows move inside; Tabbing back returns to the last-focused control; arrows clamp at the ends (no wrap) — <code>2.1.1 Keyboard</code>. The top bar, device toggle, and bottom-left panels are individual Tab stops instead.</li>
+          <li><strong>Stage stops come LAST.</strong> All the surrounding chrome is tabbed first; the stage's own controls (the Section, then Add Section) sit at the end so keyboard users traverse the frame, then reach the canvas — <code>2.4.3 Focus Order</code>.</li>
+          <li><strong>The Section is a drill-in container.</strong> It's ONE Tab stop; <kbd>Enter</kbd> (or a mouse click) <em>selects</em> it — that's when its floating panel appears — and moves focus inside, where Tab/Shift+Tab move between the <strong>elements</strong> (trapped + wrapping). Merely Tab-<em>focusing</em> the Section does not select it or show the panel. <kbd>Esc</kbd> exits back to the Section. Keeps the huge stage out of the top-level Tab order — <code>2.1.1</code>, <code>2.1.2 No Keyboard Trap</code>, <code>2.4.3</code>. (Mouse click = Enter throughout.)</li>
+          <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
+          <li><strong>Menu buttons</strong> (▾): open on Enter / Space / ↓ (focus first item), ↑ opens at last item. Menus <em>wrap</em> with ↑↓. Esc closes and returns focus to the button — <code>2.1.2 No Keyboard Trap</code>, <code>4.1.2 Name, Role, Value</code> (<code>aria-haspopup</code>, <code>aria-expanded</code>).</li>
+          <li><strong>Nothing opens on focus</strong> — only on activation — <code>3.2.1 On Focus</code>.</li>
+          <li><strong>Visible focus</strong> on every control — <code>2.4.7 Focus Visible</code>; sticky bars must not hide the focused control — <code>2.4.11 Focus Not Obscured</code>.</li>
+          <li><strong>Hover tooltips must also appear on keyboard focus.</strong> Every icon control that shows a tooltip on hover shows the same tooltip when it receives focus via Tab, and <kbd>Esc</kbd> dismisses it without moving focus — <code>1.4.13 Content on Hover or Focus</code>, <code>2.1.1</code>. (Live-editor gap: tooltips are custom hover-only components with no <code>aria-describedby</code> and no focus trigger.)</li>
+          <li><strong>Zoom slider &amp; section drag-handle</strong> need a keyboard alternative (arrows to change value / move) — <code>2.5.7 Dragging Movements</code>. Flagged for phase 2.</li>
+          <li>Every icon-only control needs an accessible name — <code>4.1.2</code>. (Real editor gap: rail icons often ship unnamed.)</li>
+        </ul>
+      </details>
+    </div>
+  </aside>
+
+  <main class="app" id="app">
+    <h2 class="sr-only">Harmony editor main screen — keyboard prototype for the controls around the stage.</h2>
+
+    <!-- Top chrome bar — each control is its OWN Tab stop (not a toolbar); stops 1–11 -->
+    <div class="chrome" role="group" aria-label="Editor top bar">
+      <button class="cbtn" data-kbd-step="1" data-kbd-name="Wix menu" aria-haspopup="menu" aria-expanded="false" data-menu="wix"><span class="logo">WIX</span> ▾</button>
+      <button class="avatar" data-kbd-step="2" data-kbd-name="Account menu" aria-haspopup="menu" aria-expanded="false" data-menu="account" aria-label="Account menu"></button>
+      <button class="cbtn" data-kbd-step="3" data-kbd-name="Site: My Site 73" aria-haspopup="menu" aria-expanded="false" data-menu="site">My Site 73 ▾</button>
+      <button class="cbtn" data-kbd-step="4" data-kbd-name="Brand" aria-haspopup="menu" aria-expanded="false" data-menu="brand">Brand ▾</button>
+      <span class="spacer"></span>
+      <button class="cbtn" data-kbd-step="5" data-kbd-name="Zoom: Fit 100%" aria-haspopup="menu" aria-expanded="false" data-menu="zoom">Fit (100%) ▾</button>
+      <span class="spacer"></span>
+      <a href="#" class="cbtn ghost" data-kbd-step="6" data-kbd-name="Upgrade" onclick="return false">Upgrade</a>
+      <button class="cbtn icon" data-kbd-step="7" data-kbd-name="Undo" aria-label="Undo">↶</button>
+      <button class="cbtn icon" data-kbd-step="8" data-kbd-name="Redo" aria-label="Redo">↷</button>
+      <button class="cbtn icon" data-kbd-step="9" data-kbd-name="Save" aria-label="Save">☁</button>
+      <button class="cbtn" data-kbd-step="10" data-kbd-name="Preview">Preview</button>
+      <button class="cbtn pri" data-kbd-step="11" data-kbd-name="Publish">Publish</button>
+    </div>
+
+    <!-- (2) + Add   (3) Contextual toolbar -->
+    <div class="toolbar2">
+      <span class="addbtn-wrap">
+        <button class="cbtn" style="border:1px solid #E3E5E9" data-kbd-step="12" data-kbd-name="Add elements" aria-haspopup="menu" aria-expanded="false" data-menu="add">＋ Add</button>
+      </span>
+      <div style="display:flex;align-items:center;gap:4px" role="toolbar" aria-label="Section actions" data-tb="h" data-kbd-step="13" data-kbd-name="Section actions toolbar">
+        <button class="cbtn" data-kbd-sub data-kbd-name="Ask Aria">✦ Ask Aria</button>
+        <span class="sep"></span>
+        <button class="cbtn" data-kbd-sub data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
+        <button class="cbtn" data-kbd-sub data-kbd-name="Replace Background" aria-haspopup="menu" aria-expanded="false" data-menu="bg">◯ Replace Background ▾</button>
+        <span class="sep"></span>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Effects" aria-label="Effects">▦</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Arrange layout" aria-label="Arrange layout">≡</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Section background" aria-label="Section background">▭</button>
+        <span class="sep"></span>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Search" aria-label="Search">⌕</button>
+        <span class="sep"></span>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Help" aria-label="Help">?</button>
+      </div>
+    </div>
+
+    <!-- Browser frame -->
+    <div class="frame">
+      <div class="framebar">
+        <span class="dots">● ● ●</span>
+        <button class="cbtn" data-kbd-step="14" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
+        <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="15" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
+        <div class="device" role="group" aria-label="Preview device">
+          <button class="dtoggle" data-kbd-step="16" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
+          <button class="dtoggle" data-kbd-step="17" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
+        </div>
+      </div>
+
+      <div class="canvas">
+        <!-- (7) Left rail -->
+        <div class="rail" role="toolbar" aria-label="Section tools" aria-orientation="vertical" data-tb="v" data-kbd-step="18" data-kbd-name="Left rail toolbar">
+          <button class="rbtn" data-kbd-sub data-kbd-name="Layers" aria-label="Layers">▤</button>
+          <button class="rbtn" data-kbd-sub data-kbd-name="Move up" aria-label="Move section up">↑</button>
+          <button class="rbtn" data-kbd-sub data-kbd-name="Move down" aria-label="Move section down">↓</button>
+          <button class="rbtn" data-kbd-sub data-kbd-name="More section actions" aria-label="More section actions" aria-haspopup="menu" aria-expanded="false" data-menu="railmore">⋯</button>
+        </div>
+
+        <div class="stage">
+          <!-- Bottom-left floating panels — each its OWN Tab stop (not a toolbar) -->
+          <div class="floattools" role="group" aria-label="Editor panels">
+            <button class="rbtn" data-kbd-step="19" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
+            <button class="rbtn" data-kbd-step="20" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
+            <button class="rbtn" data-kbd-step="21" data-kbd-name="Help" aria-label="Help">?</button>
+          </div>
+
+          <!-- Ask Aria floating assistant -->
+          <button class="askaria-float" data-kbd-step="22" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
+
+          <!-- STAGE (last): the Section is ONE Tab stop; Enter drills IN and Tab
+               cycles its toolbar + elements (trapped); Esc exits. Element-level
+               keyboard is a later phase. -->
+          <div class="section-box" role="group" aria-label="Section" tabindex="0" data-kbd-step="23" data-kbd-name="Section — Enter to edit inside">
+            <span class="section-tag">Section</span>
+
+            <!-- Section's own floating panel — shown while the Section is selected,
+                 hidden the moment an element inside is selected. -->
+            <div class="sec-panel" id="sec-panel" role="group" aria-label="Section actions" hidden>
+              <button class="rbtn" tabindex="-1" aria-label="Section background" title="Section background">🖥</button>
+              <button class="rbtn" tabindex="-1" aria-label="AI tools" title="AI tools">✦</button>
+              <button class="rbtn" tabindex="-1" aria-label="Duplicate section" title="Duplicate section">↻</button>
+              <button class="rbtn" tabindex="-1" aria-label="Section layouts" title="Section layouts">▦</button>
+              <span class="sp-sep"></span>
+              <button class="cbtn" tabindex="-1">✦ Ask Aria</button>
+            </div>
+
+            <!-- "The relevant menu above" — element action bar (shown when an element is selected) -->
+            <div class="el-actionbar" id="el-actionbar" role="toolbar" aria-label="Element actions" hidden></div>
+
+            <!-- Elements on the stage — the inner Tab stops -->
+            <div class="els">
+              <button class="stage-el heading" data-el data-eltype="heading" tabindex="-1" data-kbd-name="Heading element">Heading</button>
+              <button class="stage-el image"   data-el data-eltype="image"   tabindex="-1" data-kbd-name="Image element" aria-label="Image element">🩷 Image</button>
+              <button class="stage-el button"  data-el data-eltype="button"  tabindex="-1" data-kbd-name="Button element">Button</button>
+            </div>
+
+            <!-- Floating small menu, anchored to the selected element -->
+            <div class="el-floatmenu" id="el-floatmenu" role="group" aria-label="Quick actions" hidden></div>
+
+            <div class="stage-note">Section — <strong>Enter</strong> to edit inside; then <strong>Tab</strong> between elements, <strong>Enter</strong> selects one (opens its action bar above + floating menu) · <strong>Esc</strong> deselects, then exits</div>
+          </div>
+
+          <button class="add-section" data-kbd-step="24" data-kbd-name="Add Section">＋ Add Section</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script>
+(function () {
+  'use strict';
+  const app = document.getElementById('app');
+  const fnRole = document.getElementById('fn-role'), fnName = document.getElementById('fn-name'), fnHint = document.getElementById('fn-hint');
+  const logEl = document.getElementById('kbd-log');
+  let insideSection = false;   // drill-in state: are we editing inside the Section?
+
+  function log(m){ const e=logEl.querySelector('.log-empty'); if(e)e.remove(); const mt=m.match(/^([^—]+)—\s*(.*)$/); const d=document.createElement('div'); d.innerHTML=mt?'<span class="log-key">'+mt[1].trim()+'</span> — '+mt[2]:m; logEl.prepend(d); while(logEl.children.length>24)logEl.lastChild.remove(); }
+  const toastEl=document.createElement('div'); toastEl.className='kbd-toast'; toastEl.setAttribute('role','status'); document.body.appendChild(toastEl); let tT=null;
+  function toast(m){ toastEl.innerHTML='<span class="kbd-toast-label">What happens</span>'; toastEl.appendChild(document.createTextNode(m)); toastEl.classList.add('show'); clearTimeout(tT); tT=setTimeout(()=>toastEl.classList.remove('show'),4500); log(m); }
+
+  // ---------- Menu definitions (APG Menu). Generated as real role=menu markup. ----------
+  const MENUS = {
+    wix:      { label:'Wix', items:['Site actions','Settings','Dashboard','Help center','Sign out'] },
+    account:  { label:'Account', items:['Account settings','Billing','Sign out'] },
+    site:     { label:'Site', items:['Rename site','Site history','Duplicate site','Site settings'] },
+    brand:    { label:'Brand', items:['Brand kit','Colors','Fonts','Logo'] },
+    zoom:     { label:'Zoom', radio:'100%', items:['Fit to screen','50%','75%','100%','150%','200%'] },
+    add:      { label:'Add', items:['Section','Text','Image','Button','Gallery','More elements…'] },
+    layout:   { label:'Change Layout', items:['Layout 1','Layout 2','Layout 3','Layout 4'] },
+    bg:       { label:'Replace Background', items:['Upload image','From media library','Solid color','Video'] },
+    page:     { label:'Page', radio:'Products', items:['Home','Products','New Page','Manage Pages…'] },
+    railmore: { label:'More section actions', items:['Duplicate section','Delete section','Hide on this page','Section settings'] }
+  };
+
+  let openMenu = null, openBtn = null;
+  const menuLayer = document.createElement('div'); document.body.appendChild(menuLayer);
+
+  function buildMenus(){
+    Object.keys(MENUS).forEach(key=>{
+      const def = MENUS[key];
+      const m = document.createElement('div');
+      m.className = 'menu'; m.id = 'menu-'+key; m.setAttribute('role','menu'); m.setAttribute('aria-label', def.label);
+      def.items.forEach(label=>{
+        const b = document.createElement('button');
+        const isRadio = !!def.radio;
+        b.setAttribute('role', isRadio ? 'menuitemradio' : 'menuitem');
+        b.tabIndex = -1; b.dataset.label = label;
+        if (isRadio) b.setAttribute('aria-checked', label===def.radio ? 'true':'false');
+        b.innerHTML = '<span>'+label+'</span>';
+        m.appendChild(b);
+      });
+      menuLayer.appendChild(m);
+      // wire the triggering button
+      const btn = app.querySelector('[data-menu="'+key+'"]');
+      btn.setAttribute('aria-controls', m.id);
+      btn._menu = m; m._btn = btn; m._def = def;
+      btn.addEventListener('click', (e)=>{ e.preventDefault(); (btn.getAttribute('aria-expanded')==='true') ? closeMenu(true) : openTheMenu(btn, false); });
+      btn.addEventListener('keydown', (e)=>{
+        if (e.key==='Enter' || e.key===' ' || e.key==='ArrowDown'){ e.preventDefault(); openTheMenu(btn, false); }
+        else if (e.key==='ArrowUp'){ e.preventDefault(); openTheMenu(btn, true); }
+      });
+      m.addEventListener('keydown', (e)=>onMenuKey(e, m));
+      Array.from(m.querySelectorAll('[role^="menuitem"]')).forEach(it=>{
+        it.addEventListener('click', ()=>activateItem(m, it));
+      });
+    });
+  }
+
+  function items(m){ return Array.from(m.querySelectorAll('[role^="menuitem"]')); }
+  function positionMenu(btn, m){
+    const r = btn.getBoundingClientRect();
+    m.style.top = (window.scrollY + r.bottom + 6) + 'px';
+    // vertical rail menus open to the right; others below-left-aligned
+    if (btn.closest('[data-tb="v"]')) { m.style.top = (window.scrollY + r.top) + 'px'; m.style.left = (window.scrollX + r.right + 8) + 'px'; }
+    else { let left = window.scrollX + r.left; left = Math.min(left, window.scrollX + document.documentElement.clientWidth - m.offsetWidth - 8); m.style.left = Math.max(8, left) + 'px'; }
+  }
+  function openTheMenu(btn, focusLast){
+    if (typeof hideTip==='function') hideTip();
+    if (openMenu && openMenu !== btn._menu) closeMenu(false);
+    const m = btn._menu; m.classList.add('show'); btn.setAttribute('aria-expanded','true');
+    positionMenu(btn, m);
+    if (btn.closest('[data-tb="v"]')) { const r=btn.getBoundingClientRect(); const left=window.scrollX+r.right+8; m.style.left = Math.min(left, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-8)+'px'; }
+    else positionMenu(btn, m);
+    openMenu = m; openBtn = btn;
+    const its = items(m); const t = focusLast ? its[its.length-1] : its[0]; t.focus();
+    toast((focusLast?'↑':'Enter / Space / ↓')+' — opens the “'+(btn.dataset.kbdName||MENUS[Object.keys(MENUS).find(k=>MENUS[k]===m._def)].label)+'” menu; focus moves to the '+(focusLast?'last':'first')+' item. ↑↓ to move, Esc to close.');
+  }
+  function closeMenu(returnFocus){
+    if (!openMenu) return;
+    openMenu.classList.remove('show'); if (openBtn) openBtn.setAttribute('aria-expanded','false');
+    const b = openBtn; openMenu = null; openBtn = null;
+    if (returnFocus && b) b.focus();
+  }
+  function onMenuKey(e, m){
+    const its = items(m); let i = its.indexOf(document.activeElement);
+    if (e.key==='ArrowDown'){ e.preventDefault(); i=(i+1)%its.length; its[i].focus(); log('↓ — '+its[i].dataset.label); }
+    else if (e.key==='ArrowUp'){ e.preventDefault(); i=(i-1+its.length)%its.length; its[i].focus(); log('↑ — '+its[i].dataset.label); }
+    else if (e.key==='Home'){ e.preventDefault(); its[0].focus(); log('Home — '+its[0].dataset.label); }
+    else if (e.key==='End'){ e.preventDefault(); its[its.length-1].focus(); log('End — '+its[its.length-1].dataset.label); }
+    else if (e.key==='Escape'){ e.preventDefault(); const name=m._btn.dataset.kbdName||m._def.label; closeMenu(true); toast('Esc — closes the “'+name+'” menu; focus returns to its button.'); }
+    else if (e.key==='Tab'){ closeMenu(false); }   // APG: Tab closes the menu and moves on
+    else if (e.key==='Enter' || e.key===' '){ e.preventDefault(); activateItem(m, document.activeElement); }
+  }
+  function activateItem(m, it){
+    if (!it || !it.dataset) return;
+    const def = m._def, label = it.dataset.label, name = m._btn.dataset.kbdName || def.label;
+    if (it.getAttribute('role')==='menuitemradio'){
+      items(m).forEach(x=>x.setAttribute('aria-checked', x===it ? 'true':'false'));
+      def.radio = label;
+      // reflect on the trigger label where it makes sense
+      if (m.id==='menu-zoom') m._btn.firstChild ? m._btn.childNodes[0].nodeValue = 'Fit ('+label+') ' : 0;
+      closeMenu(true);
+      toast('Enter — “'+label+'” chosen in the '+name+' menu (radio). Menu closes, focus returns to the button.');
+    } else {
+      closeMenu(true);
+      toast('Enter — runs “'+label+'” from the '+name+' menu. The menu closes and focus returns to its button. (Real outcome: opens the '+label+' surface / performs the action.)');
+    }
+  }
+  document.addEventListener('click', (e)=>{ if (openMenu && !e.target.closest('.menu') && !e.target.closest('[aria-haspopup="menu"]')) closeMenu(false); });
+
+  // ---------- Toolbars (APG Toolbar, roving tabindex) ----------
+  function toolbarItems(tb){ return Array.from(tb.querySelectorAll('[data-kbd-sub]')).filter(el=>!el.disabled && el.offsetParent!==null); }
+  function initToolbar(tb){
+    const its = toolbarItems(tb); if(!its.length) return;
+    its.forEach((it,i)=> it.tabIndex = i===0?0:-1);
+    const vert = tb.dataset.tb==='v';
+    tb.addEventListener('keydown', (e)=>{
+      const list = toolbarItems(tb); let i = list.indexOf(document.activeElement); if(i<0) return;
+      const nextK = vert?'ArrowDown':'ArrowRight', prevK = vert?'ArrowUp':'ArrowLeft';
+      if (e.key===nextK){ if(i<list.length-1){ e.preventDefault(); rove(list,i+1); } else e.preventDefault(); }
+      else if (e.key===prevK){ if(i>0){ e.preventDefault(); rove(list,i-1); } else e.preventDefault(); }
+      else if (e.key==='Home'){ e.preventDefault(); rove(list,0); }
+      else if (e.key==='End'){ e.preventDefault(); rove(list,list.length-1); }
+    });
+    tb.addEventListener('focusin', (e)=>{ const list=toolbarItems(tb); const i=list.indexOf(e.target); if(i>=0) list.forEach((it,j)=>it.tabIndex=j===i?0:-1); });
+  }
+  function rove(list,n){ list.forEach((it,j)=>it.tabIndex=j===n?0:-1); list[n].focus(); log((list===null?'':'')+'Arrow — '+(list[n].dataset.kbdName||list[n].textContent.trim())); }
+
+  // ---------- Toggle buttons (device) ----------
+  app.querySelectorAll('.dtoggle').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      app.querySelectorAll('.dtoggle').forEach(b=>b.setAttribute('aria-pressed', b===btn?'true':'false'));
+      toast('Enter / Space — switches the canvas to '+btn.dataset.kbdName+'. (Mutually exclusive toggle.)');
+    });
+  });
+  // ---------- Plain buttons / links outcomes ----------
+  function wireOutcome(sel, msg){ const el=app.querySelector(sel); if(el) el.addEventListener('click', ()=>toast(msg)); }
+  app.querySelectorAll('[data-kbd-name="Ask Aria"], [data-kbd-name="Ask Aria (assistant)"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — opens the Aria AI assistant (a separate panel). Focus moves into Aria; closing it returns focus here.')));
+  app.querySelectorAll('[data-kbd-name="Add Section"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — adds a new section below; focus moves to the new section on the stage.')));
+  app.querySelectorAll('[data-kbd-name="Preview"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — enters Preview mode (a separate view).')));
+  app.querySelectorAll('[data-kbd-name="Publish"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — opens the Publish flow / confirms publishing the site.')));
+  app.querySelectorAll('[data-kbd-name="Undo"],[data-kbd-name="Redo"],[data-kbd-name="Save"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — '+b.dataset.kbdName+'s the last change; focus stays on the button.')));
+
+  // ---------- Focus indicator → sidebar ----------
+  function describe(el){
+    const inMenu = el.closest('.menu');
+    if (inMenu){ fnRole.className='fn-role menu'; fnRole.textContent='Menu item'; fnName.textContent=el.dataset.label||el.textContent.trim(); fnHint.textContent='↑↓ move · Home/End ends · Enter runs · Esc closes'; return; }
+    const tb = el.closest('[role="toolbar"]');
+    if (tb){ fnRole.className='fn-role'; fnRole.textContent='In toolbar'; fnName.textContent=(el.dataset.kbdName||el.textContent.trim())+' — '+(tb.getAttribute('aria-label')||''); fnHint.textContent=(tb.dataset.tb==='v'?'↑↓':'←→')+' move · Home/End ends'+(el.getAttribute('aria-haspopup')?' · ↓/Enter opens its menu':''); return; }
+    fnRole.className='fn-role'; fnRole.textContent = el.getAttribute('aria-haspopup') ? 'Menu button' : (el.tagName==='A'?'Link':'Button');
+    fnName.textContent = el.dataset.kbdName || el.textContent.trim();
+    fnHint.textContent = el.getAttribute('aria-haspopup') ? '↓ / Enter / Space opens its menu' : 'Enter / Space activates';
+  }
+  document.addEventListener('focusin', (e)=>{
+    const el=e.target; if (el.closest('.kbd-sidebar')) return;
+    if (el===document.body) return;
+    if (el.closest('#app') || el.closest('.menu')) describe(el);
+  });
+
+  // ---------- Tab-order badges ----------
+  const badgeLayer = document.createElement('div'); document.body.appendChild(badgeLayer);
+  function letter(i){ return String.fromCharCode(97+i); }
+  function renderBadges(){
+    badgeLayer.innerHTML='';
+    const stops = Array.from(app.querySelectorAll('[data-kbd-step]')).sort((a,b)=>(+a.dataset.kbdStep)-(+b.dataset.kbdStep));
+    stops.forEach(stop=>{
+      const n = stop.dataset.kbdStep;
+      const subs = Array.from(stop.querySelectorAll('[data-kbd-sub]')).filter(el=>el.offsetParent!==null);
+      if (subs.length){
+        subs.forEach((it,i)=> placeBadge(it, n+letter(i), i===0?'b':'g'));
+      } else {
+        placeBadge(stop, n, 'b');
+      }
+    });
+    // When drilled into the Section, badge its element Tab stops (23a, 23b, …).
+    if (insideSection){ els().forEach((it,i)=> placeBadge(it, '23'+letter(i), 'g')); }
+  }
+  function placeBadge(el, text, cls){
+    const r = el.getBoundingClientRect(); if(r.width===0) return;
+    const b=document.createElement('div'); b.className='kbd-badge '+cls; b.textContent=text;
+    b.style.left=(window.scrollX+r.left)+'px'; b.style.top=(window.scrollY+r.top)+'px';
+    badgeLayer.appendChild(b);
+  }
+  document.getElementById('badge-toggle').addEventListener('change', (e)=>{ document.body.classList.toggle('no-badges', !e.target.checked); });
+  window.addEventListener('resize', ()=>{ renderBadges(); if(openMenu&&openBtn) positionMenu(openBtn,openMenu); });
+  window.addEventListener('scroll', renderBadges, true);
+
+  // ---------- Tooltips: trigger on FOCUS as well as hover (WCAG 1.4.13) ----------
+  // Rule: any control that shows a hover tooltip must also show it on keyboard
+  // focus (it is already a Tab stop). Esc dismisses it without moving focus.
+  const tip = document.createElement('div'); tip.className='kbd-tip'; tip.setAttribute('role','tooltip'); tip.id='kbd-tip'; document.body.appendChild(tip);
+  let tipFor = null;
+  function tipText(el){ return el.getAttribute('aria-label') || el.dataset.kbdName || ''; }
+  function showTip(el){
+    const txt = tipText(el); if(!txt) return;
+    tip.textContent = txt; tip.classList.add('show');
+    const r = el.getBoundingClientRect(), vert = !!el.closest('[data-tb="v"]');
+    tip.classList.toggle('left', vert);
+    if (vert){ tip.style.left=(window.scrollX+r.right+8)+'px'; tip.style.top=(window.scrollY+r.top+r.height/2-tip.offsetHeight/2)+'px'; }
+    else { tip.style.top=(window.scrollY+r.bottom+8)+'px'; tip.style.left=(window.scrollX+r.left)+'px'; }
+    tipFor = el;
+  }
+  function hideTip(){ tip.classList.remove('show'); tipFor=null; }
+  // Icon-only controls are the ones that carry a hover tooltip in the real editor.
+  const TIP_SEL = '.cbtn.icon, .avatar, .rbtn, .dtoggle';
+  app.querySelectorAll(TIP_SEL).forEach(el=>{
+    el.addEventListener('mouseenter', ()=>showTip(el));
+    el.addEventListener('mouseleave', ()=>{ if(tipFor===el) hideTip(); });
+  });
+  // Keyboard trigger — focusin bubbles, so delegate on the app (also handles roving focus).
+  app.addEventListener('focusin', (e)=>{ const el=e.target.closest(TIP_SEL); if(el) showTip(el); else if(tipFor) hideTip(); });
+  app.addEventListener('focusout', ()=>{ if(tipFor) hideTip(); });
+  // Esc dismisses the tooltip without moving focus (1.4.13 dismissable)
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && tip.classList.contains('show') && !openMenu){ hideTip(); } });
+
+  // ---------- Section drill-in: Tab stop on the Section, Enter tabs INSIDE ----------
+  // The Section is one Tab stop (#23). Enter enters it: focus moves to the first
+  // control inside, Tab/Shift+Tab cycle its toolbar + elements (TRAPPED, wrapping),
+  // and Esc exits back out to the Section. Element-level keyboard is a later phase.
+  const sectionBox = app.querySelector('.section-box');
+  const elActionbar = document.getElementById('el-actionbar');
+  const elFloat = document.getElementById('el-floatmenu');
+  const secPanel = document.getElementById('sec-panel');
+  let selectedEl = null;
+
+  // The Section's own floating panel is visible while the Section is the selection
+  // (its stop is focused, or we're browsing elements inside it) but NOT once an
+  // element is selected — then the element's own bars take over.
+  function updateSectionPanel(){
+    // The Section's panel shows only once the Section is SELECTED (Enter / mouse click),
+    // i.e. while inside the section with no element selected — NOT merely on Tab-focus.
+    secPanel.hidden = !(insideSection && !selectedEl);
+  }
+
+  // Per-element-type action sets shown in the action bar above.
+  const EL_ACTIONS = {
+    heading: ['Edit text','Font & style','Animate','Effects','Settings'],
+    image:   ['Replace Image','Adjust','Filters','Crop','Link','Settings'],
+    button:  ['Edit label','Link','Design','Animate','Settings']
+  };
+  const EL_FLOAT = [['Edit','✎'],['AI tools','✦'],['Duplicate','⧉'],['More','⋯']];
+
+  function els(){ return Array.from(sectionBox.querySelectorAll('[data-el]')).filter(el=>el.offsetParent!==null); }
+  function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; }
+  function deselectEl(){ selectedEl = null; els().forEach(x=>x.classList.remove('selected')); hideElBars(); updateSectionPanel(); }
+  function enterSection(){
+    insideSection = true; sectionBox.classList.add('entered'); selectedEl = null; hideElBars();
+    const e = els(); if (e.length) e[0].focus();
+    updateSectionPanel(); renderBadges();
+    toast('Enter — inside the section (its panel stays). Tab / Shift+Tab move between the elements; Enter selects one; Esc deselects, then exits.');
+  }
+  function exitSection(){
+    insideSection = false; sectionBox.classList.remove('entered'); deselectEl(); sectionBox.focus();
+    updateSectionPanel(); renderBadges();
+    toast('Esc — exited the section; focus returns to the Section (Tab stop 23).');
+  }
+  function selectElement(el){
+    selectedEl = el;
+    els().forEach(x=>x.classList.toggle('selected', x===el));
+    const type = el.dataset.eltype, acts = EL_ACTIONS[type] || ['Settings'];
+    elActionbar.innerHTML = '<span class="eatype">'+type+'</span>' + acts.map(a=>'<button class="eabtn" tabindex="-1">'+a+'</button>').join('');
+    elActionbar.hidden = false;
+    elFloat.innerHTML = EL_FLOAT.map(([name,ic])=>'<button class="fmbtn" tabindex="-1" aria-label="'+name+'" title="'+name+'">'+ic+'</button>').join('');
+    elFloat.hidden = false;
+    const sb = sectionBox.getBoundingClientRect(), r = el.getBoundingClientRect();
+    elFloat.style.left = Math.max(6, r.right - sb.left - elFloat.offsetWidth) + 'px';
+    elFloat.style.top  = Math.max(40, r.top - sb.top - 42) + 'px';
+    updateSectionPanel();   // element now selected → the Section's own panel disappears
+    renderBadges();
+    toast('Enter — “'+el.dataset.kbdName+'” selected. The section’s panel disappears; the element’s action bar opens above and a floating menu appears on it. (Navigating into those bars is the next phase.)');
+  }
+  sectionBox.addEventListener('keydown', (e)=>{
+    if (!insideSection && (e.key==='Enter' || e.key===' ') && e.target===sectionBox){ e.preventDefault(); enterSection(); }
+  });
+  // Inside the section (trapped): Tab moves between elements, Enter selects, Esc deselects then exits.
+  document.addEventListener('keydown', (e)=>{
+    if (!insideSection) return;
+    if (e.key==='Escape'){
+      e.preventDefault();
+      if (selectedEl){ deselectEl(); renderBadges(); toast('Esc — element deselected; its action bar + floating menu close. Tab to browse elements; Esc again exits the section.'); }
+      else exitSection();
+      return;
+    }
+    if (e.key==='Tab'){
+      e.preventDefault();
+      if (selectedEl){ deselectEl(); renderBadges(); }
+      const list = els(); if(!list.length) return;
+      let i = list.indexOf(document.activeElement);
+      i = (i + (e.shiftKey?-1:1) + list.length) % list.length;
+      list[i].focus();
+      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(list[i].dataset.kbdName||list[i].textContent.trim())+' (element, trapped in section)');
+      return;
+    }
+    if (e.key==='Enter' || e.key===' '){
+      const el = document.activeElement.closest('[data-el]');
+      if (el){ e.preventDefault(); selectElement(el); }
+    }
+  }, true);
+  // Mouse click = Enter. Clicking an element selects it (entering the section first if needed).
+  app.querySelectorAll('[data-el]').forEach(el=> el.addEventListener('click', (e)=>{ e.stopPropagation(); if(!insideSection) enterSection(); selectElement(el); }));
+  // Clicking the section background = Enter on the Section stop (select the section → panel shows).
+  sectionBox.addEventListener('click', (e)=>{
+    if (e.target.closest('[data-el]') || e.target.closest('.sec-panel') || e.target.closest('.el-actionbar') || e.target.closest('.el-floatmenu')) return;
+    if (!insideSection) enterSection();
+  });
+
+  // ---------- Init ----------
+  buildMenus();
+  app.querySelectorAll('[role="toolbar"]').forEach(initToolbar);
+  requestAnimationFrame(renderBadges);
+  setTimeout(renderBadges, 200);
+})();
+</script>
+</body>
+</html>
