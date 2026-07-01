@@ -80,10 +80,11 @@
   .stage-el.image { font-size: 15px; }
   .stage-el.selected { border-color: #116DFF; box-shadow: 0 0 0 4px rgba(17,109,255,.18); }
   /* "The relevant menu above" — element action bar, docked at the top of the section */
-  .el-actionbar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: #1D2230; color: #fff; border-radius: 10px; padding: 5px 6px; box-shadow: 0 8px 24px rgba(0,0,0,.28); z-index: 7; white-space: nowrap; }
+  .el-actionbar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: #fff; color: #20303C; border: 1px solid #E3E5E9; border-radius: 10px; padding: 5px 6px; box-shadow: 0 8px 24px rgba(0,0,0,.16); z-index: 7; white-space: nowrap; }
   .el-actionbar[hidden] { display: none; }
-  .el-actionbar .eabtn { background: transparent; border: 0; color: #E7EAF3; font-size: 13px; padding: 6px 10px; border-radius: 7px; cursor: pointer; font-family: inherit; }
-  .el-actionbar .eatype { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #9AA6C7; padding: 0 8px 0 4px; }
+  .el-actionbar .eabtn { background: transparent; border: 0; color: #20303C; font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .el-actionbar .eabtn:hover { background: #F0F1F3; }
+  .el-actionbar .eatype { font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #868AA5; padding: 0 8px 0 4px; }
   /* Floating small menu, anchored to the selected element */
   .el-floatmenu { position: absolute; display: flex; gap: 2px; background: #fff; border: 1px solid #E3E5E9; border-radius: 10px; padding: 4px 5px; box-shadow: 0 6px 18px rgba(0,0,0,.16); z-index: 8; }
   .el-floatmenu[hidden] { display: none; }
@@ -98,12 +99,21 @@
   .askaria-float { position: absolute; right: 14px; bottom: 14px; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
 
   /* ---------- Menus (APG Menu) ---------- */
-  .menu { position: absolute; z-index: 500; min-width: 190px; background: #1D2230; color: #E7EAF3; border-radius: 10px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.3); display: none; }
+  /* Dropdowns — WHITE, matching the real Wix menus. */
+  .menu { position: absolute; z-index: 500; min-width: 224px; background: #fff; color: #20303C; border: 1px solid #E7E9EF; border-radius: 14px; padding: 8px; box-shadow: 0 16px 42px rgba(0,0,0,.17); display: none; }
   .menu.show { display: block; }
-  .menu [role^="menuitem"] { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border-radius: 7px; font-size: 13px; cursor: pointer; border: 0; background: transparent; color: inherit; width: 100%; text-align: left; font-family: inherit; }
-  .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus-visible { background: #2C3346; outline: none; }
-  .menu [role="menuitemradio"][aria-checked="true"]::after { content: "✓"; color: #6BA4FF; }
-  .menu .mi-check { width: 14px; }
+  .menu [role^="menuitem"] { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 0; background: transparent; color: inherit; width: 100%; text-align: left; font-family: inherit; }
+  .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus-visible { background: #F0F1F3; outline: none; }
+  .menu .mi-label { flex: 1; }
+  .menu .mi-key { color: #9AA0AE; font-size: 13px; }
+  .menu .mi-check { color: #116DFF; font-size: 13px; visibility: hidden; }
+  .menu [role="menuitemradio"][aria-checked="true"] .mi-check { visibility: visible; }
+  .menu.nocheck [role="menuitemradio"][aria-checked="true"] .mi-check { visibility: hidden; }
+  .menu-sep { height: 1px; background: #EEF0F2; margin: 6px 8px; }
+  .menu-stepper { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 4px 10px 8px; }
+  .menu-stepper .st-val { font-size: 14px; font-weight: 600; min-width: 46px; text-align: center; }
+  .menu-stepper .st-btn { width: 28px; height: 28px; border-radius: 50%; border: 0; background: #F0F1F3; font-size: 17px; line-height: 1; cursor: pointer; color: #20303C; }
+  .menu-stepper .st-btn:hover, .menu-stepper .st-btn:focus-visible { background: #E1E3E9; outline: none; }
 
   /* ---------- Tab-order badges ---------- */
   .kbd-badge { position: absolute; z-index: 450; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 10px; color: #fff; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.3); transform: translate(-40%,-40%); }
@@ -309,15 +319,26 @@
 
   // ---------- Menu definitions (APG Menu). Generated as real role=menu markup. ----------
   const MENUS = {
-    wix:      { label:'Wix', items:['Site actions','Settings','Dashboard','Help center','Sign out'] },
-    account:  { label:'Account', items:['Account settings','Billing','Sign out'] },
+    wix:      { label:'Wix', items:['Site actions','Settings','Dashboard','Help center',{sep:true},'Sign out'] },
+    account:  { label:'Account', items:['Account settings','Billing',{sep:true},'Sign out'] },
     site:     { label:'Site', items:['Rename site','Site history','Duplicate site','Site settings'] },
     brand:    { label:'Brand', items:['Brand kit','Colors','Fonts','Logo'] },
-    zoom:     { label:'Zoom', radio:'100%', items:['Fit to screen','50%','75%','100%','150%','200%'] },
+    zoom:     { label:'Zoom', radio:'100%', nocheck:true, items:[
+                  {stepper:true},
+                  {sep:true},
+                  {label:'Fit to Screen', key:'⇧ 1'},
+                  {sep:true},
+                  {label:'50%', radio:true},
+                  {label:'100%', radio:true, key:'⌘ 0'},
+                  {label:'200%', radio:true}
+                ] },
     add:      { label:'Add', items:['Section','Text','Image','Button','Gallery','More elements…'] },
     layout:   { label:'Change Layout', items:['Layout 1','Layout 2','Layout 3','Layout 4'] },
     bg:       { label:'Replace Background', items:['Upload image','From media library','Solid color','Video'] },
-    page:     { label:'Page', radio:'Products', items:['Home','Products','New Page','Manage Pages…'] },
+    page:     { label:'Page', radio:'Products', items:[
+                  {label:'Home', radio:true}, {label:'Products', radio:true},
+                  {sep:true}, 'New Page', 'Manage Pages…'
+                ] },
     railmore: { label:'More section actions', items:['Duplicate section','Delete section','Hide on this page','Section settings'] }
   };
 
@@ -328,14 +349,25 @@
     Object.keys(MENUS).forEach(key=>{
       const def = MENUS[key];
       const m = document.createElement('div');
-      m.className = 'menu'; m.id = 'menu-'+key; m.setAttribute('role','menu'); m.setAttribute('aria-label', def.label);
-      def.items.forEach(label=>{
-        const b = document.createElement('button');
-        const isRadio = !!def.radio;
+      m.className = 'menu' + (def.nocheck ? ' nocheck' : ''); m.id = 'menu-'+key; m.setAttribute('role','menu'); m.setAttribute('aria-label', def.label);
+      def.items.forEach(raw=>{
+        const it = (typeof raw==='string') ? {label:raw} : raw;
+        if (it.sep){ const s=document.createElement('div'); s.className='menu-sep'; s.setAttribute('role','separator'); m.appendChild(s); return; }
+        if (it.stepper){
+          const row=document.createElement('div'); row.className='menu-stepper';
+          row.innerHTML='<button class="st-btn" role="menuitem" tabindex="-1" data-step="dec" aria-label="Zoom out">−</button>'
+            + '<span class="st-val">'+def.radio+'</span>'
+            + '<button class="st-btn" role="menuitem" tabindex="-1" data-step="inc" aria-label="Zoom in">+</button>';
+          m.appendChild(row); return;
+        }
+        const isRadio = it.radio || def.allRadio;
+        const b=document.createElement('button');
         b.setAttribute('role', isRadio ? 'menuitemradio' : 'menuitem');
-        b.tabIndex = -1; b.dataset.label = label;
-        if (isRadio) b.setAttribute('aria-checked', label===def.radio ? 'true':'false');
-        b.innerHTML = '<span>'+label+'</span>';
+        b.tabIndex=-1; b.dataset.label=it.label;
+        if (isRadio) b.setAttribute('aria-checked', it.label===def.radio ? 'true':'false');
+        b.innerHTML = '<span class="mi-label">'+it.label+'</span>'
+          + (isRadio ? '<span class="mi-check">✓</span>' : '')
+          + (it.key ? '<span class="mi-key">'+it.key+'</span>' : '');
         m.appendChild(b);
       });
       menuLayer.appendChild(m);
@@ -390,14 +422,26 @@
     else if (e.key==='Tab'){ closeMenu(false); }   // APG: Tab closes the menu and moves on
     else if (e.key==='Enter' || e.key===' '){ e.preventDefault(); activateItem(m, document.activeElement); }
   }
+  function setZoom(m, val){
+    m._def.radio = val;
+    m.querySelectorAll('[role="menuitemradio"]').forEach(x=>x.setAttribute('aria-checked', x.dataset.label===val ? 'true':'false'));
+    const sv = m.querySelector('.st-val'); if (sv) sv.textContent = val;
+    if (m._btn) m._btn.textContent = 'Fit ('+val+') ▾';
+  }
   function activateItem(m, it){
     if (!it || !it.dataset) return;
-    const def = m._def, label = it.dataset.label, name = m._btn.dataset.kbdName || def.label;
+    const def = m._def, name = m._btn.dataset.kbdName || def.label;
+    // Zoom stepper − / + : adjust value, keep the menu open.
+    if (it.dataset.step){
+      const levels=['50%','100%','200%']; let i=Math.max(0, levels.indexOf(def.radio));
+      i = it.dataset.step==='inc' ? Math.min(levels.length-1, i+1) : Math.max(0, i-1);
+      setZoom(m, levels[i]); log((it.dataset.step==='inc'?'+':'−')+' — zoom '+levels[i]);
+      return;
+    }
+    const label = it.dataset.label;
     if (it.getAttribute('role')==='menuitemradio'){
-      items(m).forEach(x=>x.setAttribute('aria-checked', x===it ? 'true':'false'));
-      def.radio = label;
-      // reflect on the trigger label where it makes sense
-      if (m.id==='menu-zoom') m._btn.firstChild ? m._btn.childNodes[0].nodeValue = 'Fit ('+label+') ' : 0;
+      if (m.id==='menu-zoom') setZoom(m, label);
+      else { items(m).forEach(x=>x.setAttribute('aria-checked', x===it ? 'true':'false')); def.radio = label; }
       closeMenu(true);
       toast('Enter — “'+label+'” chosen in the '+name+' menu (radio). Menu closes, focus returns to the button.');
     } else {
