@@ -54,7 +54,10 @@
   .addbtn-wrap { position: absolute; left: 14px; top: 7px; }
   .sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 8px; }
 
-  .frame { position: relative; margin: 16px; border: 1px solid #E3E5E9; border-radius: 12px; min-height: 520px; display: flex; flex-direction: column; }
+  /* editor body = a left gutter (rail + tools, OUTSIDE the frame) beside the browser frame */
+  .editor-body { display: flex; align-items: stretch; margin: 16px 16px 16px 6px; gap: 4px; }
+  .left-gutter { flex: 0 0 46px; display: flex; flex-direction: column; align-items: center; padding: 96px 0 14px; }
+  .frame { position: relative; flex: 1; min-width: 0; border: 1px solid #E3E5E9; border-radius: 12px; min-height: 520px; display: flex; flex-direction: column; }
   .framebar { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF0F2; background: #F7F8F9; border-radius: 12px 12px 0 0; }
   .dots { color: #C7CBD4; letter-spacing: 2px; }
   .url { flex: 1; text-align: center; font-size: 12px; color: #868AA5; }
@@ -62,8 +65,7 @@
   .dtoggle { border: 1px solid transparent; background: transparent; border-radius: 7px; padding: 4px 7px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
   .dtoggle[aria-pressed="true"] { background: #E6F0FF; color: #116DFF; }
 
-  .canvas { flex: 1; display: flex; }
-  .rail { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 6px; border-right: 1px solid #EEF0F2; }
+  .rail { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .rbtn { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; color: #50607A; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .rbtn:hover { background: #F3F4F6; }
   .stage { flex: 1; position: relative; padding: 26px; }
@@ -95,7 +97,7 @@
   .sec-panel[hidden] { display: none; }
   .sec-panel .sp-sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 4px; }
   .sec-panel .rbtn { width: 30px; height: 30px; }
-  .floattools { position: absolute; left: -46px; bottom: 8px; display: flex; flex-direction: column; gap: 8px; }
+  .floattools { margin-top: auto; display: flex; flex-direction: column; gap: 8px; align-items: center; }
   .askaria-float { position: absolute; right: 14px; bottom: 14px; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
 
   /* ---------- Menus (APG Menu) ---------- */
@@ -176,7 +178,7 @@
       <details class="notes">
         <summary>Focus-management &amp; WCAG 2.2 AA notes</summary>
         <ul>
-          <li><strong>Every button is its own Tab stop.</strong> All the editor chrome — top bar, +Add, the section-actions bar, the browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels — is tabbed one control at a time, in order, before the Section (stops 1–32). No arrow-key toolbars; arrows are used only inside an open menu / the zoom popover — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>. (This mirrors what the live editor actually does today.)</li>
+          <li><strong>Every button is its own Tab stop.</strong> All the editor chrome — top bar, +Add, the section-actions bar, the browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) — is tabbed one control at a time, in order, before the Section (stops 1–32). No arrow-key toolbars; arrows are used only inside an open menu / the zoom popover — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>. (This mirrors what the live editor actually does today.)</li>
           <li><strong>The Section is the one drill-in container (stop 33).</strong> <kbd>Enter</kbd> (or a mouse click) goes inside; Tab/Shift+Tab then move between its <strong>elements</strong> (trapped + wrapping). Merely Tab-<em>focusing</em> the Section does not enter it. <kbd>Esc</kbd> exits back to the Section. Keeps the page content out of the top-level Tab order — <code>2.1.2 No Keyboard Trap</code> (Esc always exits). (Mouse click = Enter throughout.)</li>
           <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
           <li><strong>Menu buttons</strong> (▾): open on Enter / Space / ↓ (focus first item), ↑ opens at last item. Menus <em>wrap</em> with ↑↓. Esc closes and returns focus to the button — <code>2.1.2 No Keyboard Trap</code>, <code>4.1.2 Name, Role, Value</code> (<code>aria-haspopup</code>, <code>aria-expanded</code>).</li>
@@ -231,35 +233,38 @@
       </div>
     </div>
 
-    <!-- Browser frame -->
-    <div class="frame">
-      <div class="framebar">
-        <span class="dots">● ● ●</span>
-        <button class="cbtn" data-kbd-step="21" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
-        <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="22" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
-        <div class="device" role="group" aria-label="Preview device">
-          <button class="dtoggle" data-kbd-step="23" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
-          <button class="dtoggle" data-kbd-step="24" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
+    <!-- Editor body: the left gutter (rail + tools) sits OUTSIDE the browser frame, as in the real editor -->
+    <div class="editor-body">
+      <!-- Left gutter — OUTSIDE the frame; every control an individual Tab stop -->
+      <div class="left-gutter">
+        <!-- (7) Left rail -->
+        <div class="rail" role="group" aria-label="Section tools">
+          <button class="rbtn" data-kbd-step="21" data-kbd-name="Layers" aria-label="Layers">▤</button>
+          <button class="rbtn" data-kbd-step="22" data-kbd-name="Move up" aria-label="Move section up">↑</button>
+          <button class="rbtn" data-kbd-step="23" data-kbd-name="Move down" aria-label="Move section down">↓</button>
+          <button class="rbtn" data-kbd-step="24" data-kbd-name="More section actions" aria-label="More section actions" aria-haspopup="menu" aria-expanded="false" data-menu="railmore">⋯</button>
+        </div>
+        <!-- Bottom-left editor panels — each its OWN Tab stop (not a toolbar) -->
+        <div class="floattools" role="group" aria-label="Editor panels">
+          <button class="rbtn" data-kbd-step="25" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
+          <button class="rbtn" data-kbd-step="26" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
+          <button class="rbtn" data-kbd-step="27" data-kbd-name="Help" aria-label="Help">?</button>
         </div>
       </div>
 
-      <div class="canvas">
-        <!-- (7) Left rail -->
-        <div class="rail" role="group" aria-label="Section tools">
-          <button class="rbtn" data-kbd-step="25" data-kbd-name="Layers" aria-label="Layers">▤</button>
-          <button class="rbtn" data-kbd-step="26" data-kbd-name="Move up" aria-label="Move section up">↑</button>
-          <button class="rbtn" data-kbd-step="27" data-kbd-name="Move down" aria-label="Move section down">↓</button>
-          <button class="rbtn" data-kbd-step="28" data-kbd-name="More section actions" aria-label="More section actions" aria-haspopup="menu" aria-expanded="false" data-menu="railmore">⋯</button>
+      <!-- Browser frame -->
+      <div class="frame">
+        <div class="framebar">
+          <span class="dots">● ● ●</span>
+          <button class="cbtn" data-kbd-step="28" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
+          <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="29" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
+          <div class="device" role="group" aria-label="Preview device">
+            <button class="dtoggle" data-kbd-step="30" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
+            <button class="dtoggle" data-kbd-step="31" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
+          </div>
         </div>
 
         <div class="stage">
-          <!-- Bottom-left floating panels — each its OWN Tab stop (not a toolbar) -->
-          <div class="floattools" role="group" aria-label="Editor panels">
-            <button class="rbtn" data-kbd-step="29" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
-            <button class="rbtn" data-kbd-step="30" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
-            <button class="rbtn" data-kbd-step="31" data-kbd-name="Help" aria-label="Help">?</button>
-          </div>
-
           <!-- Ask Aria floating assistant -->
           <button class="askaria-float" data-kbd-step="32" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
 
