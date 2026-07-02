@@ -141,7 +141,7 @@
       <div class="focus-now">
         <span class="fn-role idle" id="fn-role">No focus</span>
         <div class="fn-name" id="fn-name">Press Tab to enter the editor</div>
-        <div class="fn-hint" id="fn-hint">Every button is its own Tab stop · the Section: Enter to go inside</div>
+        <div class="fn-hint" id="fn-hint">Individual Tab stops · #13 section-actions = one toolbar (← →) · Section: Enter to go inside</div>
       </div>
       <label class="kbd-toggle"><input type="checkbox" id="badge-toggle" checked> Show Tab-order badges</label>
     </div>
@@ -149,14 +149,15 @@
     <div class="kbd-card">
       <h2>Badges</h2>
       <div class="legend-row"><span class="badge-demo b">1</span> Blue = a <strong>Tab stop</strong> (Tab reaches it)</div>
-      <div class="legend-row"><span class="badge-demo g">33a</span> Green = reachable <strong>inside the Section</strong> (Tab, after Enter)</div>
+      <div class="legend-row"><span class="badge-demo g">13b</span> Green = <strong>arrow-reachable</strong> — inside the #13 toolbar (← →), or inside the Section after Enter</div>
     </div>
 
     <div class="kbd-card">
       <h2>Keys</h2>
       <div class="keymap">
-        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> — next / previous button (every button is its own Tab stop)</div>
-        <div><kbd>↑</kbd> <kbd>↓</kbd> — move within an open menu (arrows are only inside menus now)</div>
+        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> — next / previous Tab stop (most controls individual; #13 section-actions is one toolbar)</div>
+        <div><kbd>←</kbd> <kbd>→</kbd> — move within the #13 section-actions toolbar (clamps at the ends)</div>
+        <div><kbd>↑</kbd> <kbd>↓</kbd> — move within an open menu</div>
         <div><kbd>Home</kbd> <kbd>End</kbd> — first / last control in a toolbar or menu</div>
         <div><kbd>Enter</kbd> <kbd>Space</kbd> <kbd>↓</kbd> — open a ▾ menu (focus first item)</div>
         <div><kbd>↑</kbd> (on a ▾ button) — open its menu at the last item</div>
@@ -178,7 +179,8 @@
       <details class="notes">
         <summary>Focus-management &amp; WCAG 2.2 AA notes</summary>
         <ul>
-          <li><strong>Every button is its own Tab stop.</strong> All the editor chrome — top bar, +Add, the section-actions bar, the browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) — is tabbed one control at a time, in order, before the Section (stops 1–32). No arrow-key toolbars; arrows are used only inside an open menu / the zoom popover — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>. (This mirrors what the live editor actually does today.)</li>
+          <li><strong>Mostly individual Tab stops.</strong> The top bar, +Add, browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) are each their own Tab stop, in order, before the Section (stops 1–25) — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>.</li>
+          <li><strong>The section-actions bar (#13) is ONE APG Toolbar</strong> — a single Tab stop; <kbd>←</kbd>/<kbd>→</kbd> rove between its buttons (roving tabindex, clamps at the ends — no wrap), <kbd>Home</kbd>/<kbd>End</kbd> jump to the first/last. Its two menu-buttons (Change Layout, Replace Background) still open their menus with <kbd>↓</kbd>/<kbd>Enter</kbd> — a menu-button nested in a toolbar. Badged 13a (blue, the Tab stop) · 13b–13h (green, arrow-reachable) — <code>APG Toolbar</code>.</li>
           <li><strong>The Section is the one drill-in container (stop 33).</strong> <kbd>Enter</kbd> (or a mouse click) goes inside; Tab/Shift+Tab then move between its <strong>elements</strong> (trapped + wrapping). Merely Tab-<em>focusing</em> the Section does not enter it. <kbd>Esc</kbd> exits back to the Section. Keeps the page content out of the top-level Tab order — <code>2.1.2 No Keyboard Trap</code> (Esc always exits). (Mouse click = Enter throughout.)</li>
           <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
           <li><strong>Menu buttons</strong> (▾): open on Enter / Space / ↓ (focus first item), ↑ opens at last item. Menus <em>wrap</em> with ↑↓. Esc closes and returns focus to the button — <code>2.1.2 No Keyboard Trap</code>, <code>4.1.2 Name, Role, Value</code> (<code>aria-haspopup</code>, <code>aria-expanded</code>).</li>
@@ -217,19 +219,21 @@
       <span class="addbtn-wrap">
         <button class="cbtn" style="border:1px solid #E3E5E9" data-kbd-step="12" data-kbd-name="Add elements" aria-haspopup="menu" aria-expanded="false" data-menu="add">＋ Add</button>
       </span>
-      <div style="display:flex;align-items:center;gap:4px" role="group" aria-label="Section actions">
-        <button class="cbtn" data-kbd-step="13" data-kbd-name="Ask Aria">✦ Ask Aria</button>
+      <!-- Section-actions bar = ONE APG toolbar (one Tab stop, ← → rove between items, clamp at ends);
+           the two menu-buttons inside still open their menus with ↓/Enter. -->
+      <div style="display:flex;align-items:center;gap:4px" role="toolbar" aria-label="Section actions" data-kbd-step="13" data-kbd-name="Section actions toolbar">
+        <button class="cbtn" data-kbd-sub data-kbd-name="Ask Aria">✦ Ask Aria</button>
         <span class="sep"></span>
-        <button class="cbtn" data-kbd-step="14" data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
-        <button class="cbtn" data-kbd-step="15" data-kbd-name="Replace Background" aria-haspopup="menu" aria-expanded="false" data-menu="bg">◯ Replace Background ▾</button>
+        <button class="cbtn" data-kbd-sub data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
+        <button class="cbtn" data-kbd-sub data-kbd-name="Replace Background" aria-haspopup="menu" aria-expanded="false" data-menu="bg">◯ Replace Background ▾</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-step="16" data-kbd-name="Effects" aria-label="Effects">▦</button>
-        <button class="cbtn icon" data-kbd-step="17" data-kbd-name="Arrange layout" aria-label="Arrange layout">≡</button>
-        <button class="cbtn icon" data-kbd-step="18" data-kbd-name="Section background" aria-label="Section background">▭</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Effects" aria-label="Effects">▦</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Arrange layout" aria-label="Arrange layout">≡</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Section background" aria-label="Section background">▭</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-step="19" data-kbd-name="Search" aria-label="Search">⌕</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Search" aria-label="Search">⌕</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-step="20" data-kbd-name="Help" aria-label="Help">?</button>
+        <button class="cbtn icon" data-kbd-sub data-kbd-name="Help" aria-label="Help">?</button>
       </div>
     </div>
 
@@ -239,16 +243,16 @@
       <div class="left-gutter">
         <!-- (7) Left rail -->
         <div class="rail" role="group" aria-label="Section tools">
-          <button class="rbtn" data-kbd-step="21" data-kbd-name="Layers" aria-label="Layers">▤</button>
-          <button class="rbtn" data-kbd-step="22" data-kbd-name="Move up" aria-label="Move section up">↑</button>
-          <button class="rbtn" data-kbd-step="23" data-kbd-name="Move down" aria-label="Move section down">↓</button>
-          <button class="rbtn" data-kbd-step="24" data-kbd-name="More section actions" aria-label="More section actions" aria-haspopup="menu" aria-expanded="false" data-menu="railmore">⋯</button>
+          <button class="rbtn" data-kbd-step="14" data-kbd-name="Layers" aria-label="Layers">▤</button>
+          <button class="rbtn" data-kbd-step="15" data-kbd-name="Move up" aria-label="Move section up">↑</button>
+          <button class="rbtn" data-kbd-step="16" data-kbd-name="Move down" aria-label="Move section down">↓</button>
+          <button class="rbtn" data-kbd-step="17" data-kbd-name="More section actions" aria-label="More section actions" aria-haspopup="menu" aria-expanded="false" data-menu="railmore">⋯</button>
         </div>
         <!-- Bottom-left editor panels — each its OWN Tab stop (not a toolbar) -->
         <div class="floattools" role="group" aria-label="Editor panels">
-          <button class="rbtn" data-kbd-step="25" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
-          <button class="rbtn" data-kbd-step="26" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
-          <button class="rbtn" data-kbd-step="27" data-kbd-name="Help" aria-label="Help">?</button>
+          <button class="rbtn" data-kbd-step="18" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
+          <button class="rbtn" data-kbd-step="19" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
+          <button class="rbtn" data-kbd-step="20" data-kbd-name="Help" aria-label="Help">?</button>
         </div>
       </div>
 
@@ -256,22 +260,22 @@
       <div class="frame">
         <div class="framebar">
           <span class="dots">● ● ●</span>
-          <button class="cbtn" data-kbd-step="28" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
-          <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="29" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
+          <button class="cbtn" data-kbd-step="21" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
+          <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="22" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
           <div class="device" role="group" aria-label="Preview device">
-            <button class="dtoggle" data-kbd-step="30" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
-            <button class="dtoggle" data-kbd-step="31" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
+            <button class="dtoggle" data-kbd-step="23" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
+            <button class="dtoggle" data-kbd-step="24" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
           </div>
         </div>
 
         <div class="stage">
           <!-- Ask Aria floating assistant -->
-          <button class="askaria-float" data-kbd-step="32" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
+          <button class="askaria-float" data-kbd-step="25" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
 
           <!-- STAGE (last): the Section is ONE Tab stop; Enter drills IN and Tab
                cycles its toolbar + elements (trapped); Esc exits. Element-level
                keyboard is a later phase. -->
-          <div class="section-box" role="group" aria-label="Section" tabindex="0" data-kbd-step="33" data-kbd-name="Section — Enter to edit inside">
+          <div class="section-box" role="group" aria-label="Section" tabindex="0" data-kbd-step="26" data-kbd-name="Section — Enter to edit inside">
             <span class="section-tag">Section</span>
 
             <!-- Section's own floating panel — shown while the Section is selected,
@@ -301,7 +305,7 @@
             <div class="stage-note">Section — <strong>Enter</strong> to go inside; then <strong>Tab</strong> / <strong>Shift+Tab</strong> move between its elements; <strong>Enter</strong> selects one (opens its action bar + floating menu) · <strong>Esc</strong> exits</div>
           </div>
 
-          <button class="add-section" data-kbd-step="34" data-kbd-name="Add Section">＋ Add Section</button>
+          <button class="add-section" data-kbd-step="27" data-kbd-name="Add Section">＋ Add Section</button>
         </div>
       </div>
     </div>
@@ -647,7 +651,7 @@
   function exitSection(){
     insideSection = false; sectionBox.classList.remove('entered'); deselectEl(); sectionBox.focus();
     updateSectionPanel(); renderBadges();
-    toast('Esc — exited the Section; focus returns to the Section (Tab stop 33).');
+    toast('Esc — exited the Section; focus returns to the Section (Tab stop 26).');
   }
   function selectElement(el){
     selectedEl = el;
