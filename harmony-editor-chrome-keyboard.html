@@ -33,7 +33,7 @@
   details.notes ul { margin: 6px 0; padding-left: 18px; }
 
   /* ---------- Editor replica ---------- */
-  .app { flex: 1; background: #fff; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.14); overflow: hidden; min-width: 0; }
+  .app { flex: 1; background: #fff; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.14); overflow: hidden; min-width: 0; position: relative; }
 
   /* focus ring for every real control */
   .app :focus-visible, .menu :focus-visible { outline: 3px solid #116DFF; outline-offset: 1px; border-radius: 8px; }
@@ -98,7 +98,8 @@
   .sec-panel .sp-sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 4px; }
   .sec-panel .rbtn { width: 30px; height: 30px; }
   .floattools { margin-top: auto; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-  .askaria-float { position: absolute; right: 14px; bottom: 14px; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
+  .askaria-float { position: absolute; right: 22px; bottom: 20px; z-index: 8; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
+  body[data-screen="aria"] .askaria-float { display: none; }
 
   /* ---------- Menus (APG Menu) ---------- */
   /* Dropdowns — WHITE, matching the real Wix menus. */
@@ -341,9 +342,6 @@
           <!-- Empty-stage placeholders (shown on the Blank / Aria screens) -->
           <div class="stage-empty for-blank">Empty page — no section on the stage yet. The contextual section toolbar, the left section-tools rail, and the Section box only appear once a section exists. Tab through the base chrome (top bar, + Add, page bar, panels, Ask Aria).</div>
 
-          <!-- Ask Aria floating assistant -->
-          <button class="askaria-float" data-kbd-step="25" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
-
           <!-- STAGE (last): the Section is ONE Tab stop; Enter drills IN and Tab
                cycles its toolbar + elements (trapped); Esc exits. Element-level
                keyboard is a later phase. -->
@@ -382,6 +380,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Ask Aria floating launcher — anchored to the editor's bottom-right corner (last Tab stop) -->
+    <button class="askaria-float" data-kbd-step="28" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
 
     <!-- ============ ARIA SCREEN — the Ask Aria assistant panel (shown on the "Aria" screen) ============
          A dialog. Tab order runs top→bottom: header actions → suggestion prompts → context chip →
