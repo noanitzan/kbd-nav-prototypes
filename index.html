@@ -59,12 +59,12 @@
   .dots { color: #C7CBD4; letter-spacing: 2px; }
   .url { flex: 1; text-align: center; font-size: 12px; color: #868AA5; }
   .device { display: inline-flex; gap: 2px; }
-  .dtoggle { border: 1px solid transparent; background: transparent; border-radius: 7px; padding: 4px 7px; cursor: pointer; font-size: 14px; }
+  .dtoggle { border: 1px solid transparent; background: transparent; border-radius: 7px; padding: 4px 7px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; }
   .dtoggle[aria-pressed="true"] { background: #E6F0FF; color: #116DFF; }
 
   .canvas { flex: 1; display: flex; }
   .rail { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 6px; border-right: 1px solid #EEF0F2; }
-  .rbtn { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; color: #50607A; }
+  .rbtn { width: 30px; height: 30px; border: 1px solid transparent; background: transparent; border-radius: 8px; cursor: pointer; font-size: 15px; color: #50607A; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .rbtn:hover { background: #F3F4F6; }
   .stage { flex: 1; position: relative; padding: 26px; }
   .section-box { border: 2px solid #116DFF; border-radius: 8px; min-height: 380px; position: relative; }
@@ -102,8 +102,8 @@
   /* Dropdowns — WHITE, matching the real Wix menus. */
   .menu { position: absolute; z-index: 500; min-width: 224px; background: #fff; color: #20303C; border: 1px solid #E7E9EF; border-radius: 14px; padding: 8px; box-shadow: 0 16px 42px rgba(0,0,0,.17); display: none; }
   .menu.show { display: block; }
-  .menu [role^="menuitem"] { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 0; background: transparent; color: inherit; width: 100%; text-align: left; font-family: inherit; }
-  .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus-visible { background: #F0F1F3; outline: none; }
+  .menu [role^="menuitem"], .menu [data-zoom], .menu [data-fit] { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; font-size: 14px; cursor: pointer; border: 0; background: transparent; color: inherit; width: 100%; text-align: left; font-family: inherit; }
+  .menu [role^="menuitem"]:hover, .menu [role^="menuitem"]:focus-visible, .menu [data-zoom]:hover, .menu [data-zoom]:focus-visible, .menu [data-fit]:hover, .menu [data-fit]:focus-visible { background: #F0F1F3; outline: none; }
   .menu .mi-label { flex: 1; }
   .menu .mi-key { color: #9AA0AE; font-size: 13px; }
   .menu .mi-check { color: #116DFF; font-size: 13px; visibility: hidden; }
@@ -112,7 +112,7 @@
   .menu-sep { height: 1px; background: #EEF0F2; margin: 6px 8px; }
   .menu-stepper { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 4px 10px 8px; }
   .menu-stepper .st-val { font-size: 14px; font-weight: 600; min-width: 46px; text-align: center; }
-  .menu-stepper .st-btn { width: 28px; height: 28px; border-radius: 50%; border: 0; background: #F0F1F3; font-size: 17px; line-height: 1; cursor: pointer; color: #20303C; }
+  .menu-stepper .st-btn { width: 28px; height: 28px; border-radius: 50%; border: 0; background: #F0F1F3; font-size: 17px; line-height: 1; cursor: pointer; color: #20303C; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
   .menu-stepper .st-btn:hover, .menu-stepper .st-btn:focus-visible { background: #E1E3E9; outline: none; }
 
   /* ---------- Tab-order badges ---------- */
@@ -323,7 +323,7 @@
     account:  { label:'Account', items:['Account settings','Billing',{sep:true},'Sign out'] },
     site:     { label:'Site', items:['Rename site','Site history','Duplicate site','Site settings'] },
     brand:    { label:'Brand', items:['Brand kit','Colors','Fonts','Logo'] },
-    zoom:     { label:'Zoom', radio:'100%', nocheck:true, items:[
+    zoom:     { label:'Zoom', radio:'100%', nocheck:true, popover:true, items:[
                   {stepper:true},
                   {sep:true},
                   {label:'Fit to Screen', key:'⇧ 1'},
@@ -348,25 +348,33 @@
   function buildMenus(){
     Object.keys(MENUS).forEach(key=>{
       const def = MENUS[key];
+      const pop = !!def.popover;   // zoom is a Tab-navigated popover, not an arrow-menu
       const m = document.createElement('div');
-      m.className = 'menu' + (def.nocheck ? ' nocheck' : ''); m.id = 'menu-'+key; m.setAttribute('role','menu'); m.setAttribute('aria-label', def.label);
+      m.className = 'menu' + (def.nocheck ? ' nocheck' : ''); m.id = 'menu-'+key;
+      m.setAttribute('role', pop ? 'group' : 'menu'); m.setAttribute('aria-label', def.label);
       def.items.forEach(raw=>{
         const it = (typeof raw==='string') ? {label:raw} : raw;
         if (it.sep){ const s=document.createElement('div'); s.className='menu-sep'; s.setAttribute('role','separator'); m.appendChild(s); return; }
         if (it.stepper){
           const row=document.createElement('div'); row.className='menu-stepper';
-          row.innerHTML='<button class="st-btn" role="menuitem" tabindex="-1" data-step="dec" aria-label="Zoom out">−</button>'
+          const roleAttr = pop ? '' : ' role="menuitem"';   // popover: plain buttons (Tab stops)
+          row.innerHTML='<button class="st-btn"'+roleAttr+' tabindex="-1" data-step="dec" aria-label="Zoom out">−</button>'
             + '<span class="st-val">'+def.radio+'</span>'
-            + '<button class="st-btn" role="menuitem" tabindex="-1" data-step="inc" aria-label="Zoom in">+</button>';
+            + '<button class="st-btn"'+roleAttr+' tabindex="-1" data-step="inc" aria-label="Zoom in">+</button>';
           m.appendChild(row); return;
         }
         const isRadio = it.radio || def.allRadio;
         const b=document.createElement('button');
-        b.setAttribute('role', isRadio ? 'menuitemradio' : 'menuitem');
         b.tabIndex=-1; b.dataset.label=it.label;
-        if (isRadio) b.setAttribute('aria-checked', it.label===def.radio ? 'true':'false');
+        if (pop){
+          if (it.radio){ b.dataset.zoom=it.label; b.setAttribute('aria-current', it.label===def.radio ? 'true':'false'); }
+          else { b.dataset.fit='1'; }
+        } else {
+          b.setAttribute('role', isRadio ? 'menuitemradio' : 'menuitem');
+          if (isRadio) b.setAttribute('aria-checked', it.label===def.radio ? 'true':'false');
+        }
         b.innerHTML = '<span class="mi-label">'+it.label+'</span>'
-          + (isRadio ? '<span class="mi-check">✓</span>' : '')
+          + (isRadio && !pop ? '<span class="mi-check">✓</span>' : '')
           + (it.key ? '<span class="mi-key">'+it.key+'</span>' : '');
         m.appendChild(b);
       });
@@ -374,16 +382,21 @@
       // wire the triggering button
       const btn = app.querySelector('[data-menu="'+key+'"]');
       btn.setAttribute('aria-controls', m.id);
-      btn._menu = m; m._btn = btn; m._def = def;
+      btn.setAttribute('aria-haspopup', pop ? 'true' : 'menu');
+      btn._menu = m; m._btn = btn; m._def = def; m._pop = pop;
+      if (pop) m._controls = Array.from(m.querySelectorAll('button'));
       btn.addEventListener('click', (e)=>{ e.preventDefault(); (btn.getAttribute('aria-expanded')==='true') ? closeMenu(true) : openTheMenu(btn, false); });
       btn.addEventListener('keydown', (e)=>{
         if (e.key==='Enter' || e.key===' ' || e.key==='ArrowDown'){ e.preventDefault(); openTheMenu(btn, false); }
         else if (e.key==='ArrowUp'){ e.preventDefault(); openTheMenu(btn, true); }
       });
-      m.addEventListener('keydown', (e)=>onMenuKey(e, m));
-      Array.from(m.querySelectorAll('[role^="menuitem"]')).forEach(it=>{
-        it.addEventListener('click', ()=>activateItem(m, it));
-      });
+      if (pop){
+        m.addEventListener('keydown', (e)=>handlePopoverKey(e, m));
+        m.querySelectorAll('button').forEach(b=> b.addEventListener('click', ()=>activatePopover(m, b)));
+      } else {
+        m.addEventListener('keydown', (e)=>onMenuKey(e, m));
+        Array.from(m.querySelectorAll('[role^="menuitem"]')).forEach(it=> it.addEventListener('click', ()=>activateItem(m, it)));
+      }
     });
   }
 
@@ -403,8 +416,35 @@
     if (btn.closest('[data-tb="v"]')) { const r=btn.getBoundingClientRect(); const left=window.scrollX+r.right+8; m.style.left = Math.min(left, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-8)+'px'; }
     else positionMenu(btn, m);
     openMenu = m; openBtn = btn;
-    const its = items(m); const t = focusLast ? its[its.length-1] : its[0]; t.focus();
-    toast((focusLast?'↑':'Enter / Space / ↓')+' — opens the “'+(btn.dataset.kbdName||MENUS[Object.keys(MENUS).find(k=>MENUS[k]===m._def)].label)+'” menu; focus moves to the '+(focusLast?'last':'first')+' item. ↑↓ to move, Esc to close.');
+    if (m._pop){
+      m._controls[0].focus();
+      toast('Enter — opens the Zoom popover. It is NOT a menu: Tab / Shift+Tab move between −, +, and the presets; Enter activates; Esc closes.');
+    } else {
+      const its = items(m); const t = focusLast ? its[its.length-1] : its[0]; t.focus();
+      toast((focusLast?'↑':'Enter / Space / ↓')+' — opens the “'+(btn.dataset.kbdName||m._def.label)+'” menu; focus moves to the '+(focusLast?'last':'first')+' item. ↑↓ to move, Esc to close.');
+    }
+  }
+  // Zoom popover: Tab cycles the controls (trapped, wrapping), Esc closes. Enter/Space are native button activations.
+  function handlePopoverKey(e, m){
+    if (e.key==='Escape'){ e.preventDefault(); const name=m._btn.dataset.kbdName||m._def.label; closeMenu(true); toast('Esc — closes the '+name+' popover; focus returns to its button.'); return; }
+    if (e.key==='Tab'){
+      e.preventDefault();
+      const c=m._controls; let i=c.indexOf(document.activeElement);
+      i=(i + (e.shiftKey?-1:1) + c.length) % c.length; c[i].focus();
+      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(c[i].getAttribute('aria-label')||c[i].dataset.label||c[i].textContent.trim())+' (Zoom popover)');
+      return;
+    }
+    if (e.key==='Enter' || e.key===' '){ e.preventDefault(); activatePopover(m, document.activeElement); }
+  }
+  function activatePopover(m, b){
+    if (b.dataset.step){
+      const levels=['50%','100%','200%']; let i=Math.max(0, levels.indexOf(m._def.radio));
+      i = b.dataset.step==='inc' ? Math.min(levels.length-1, i+1) : Math.max(0, i-1);
+      setZoom(m, levels[i]); log((b.dataset.step==='inc'?'+':'−')+' — zoom '+levels[i]);
+      return;   // stepper keeps the popover open
+    }
+    if (b.dataset.zoom){ setZoom(m, b.dataset.zoom); closeMenu(true); toast('Enter — zoom set to '+b.dataset.zoom+'. Popover closes, focus returns to the zoom button.'); return; }
+    if (b.dataset.fit){ closeMenu(true); toast('Enter — Fit to Screen. Popover closes, focus returns to the zoom button.'); return; }
   }
   function closeMenu(returnFocus){
     if (!openMenu) return;
@@ -424,6 +464,7 @@
   }
   function setZoom(m, val){
     m._def.radio = val;
+    m.querySelectorAll('[data-zoom]').forEach(x=>x.setAttribute('aria-current', x.dataset.zoom===val ? 'true':'false'));
     m.querySelectorAll('[role="menuitemradio"]').forEach(x=>x.setAttribute('aria-checked', x.dataset.label===val ? 'true':'false'));
     const sv = m.querySelector('.st-val'); if (sv) sv.textContent = val;
     if (m._btn) m._btn.textContent = 'Fit ('+val+') ▾';
@@ -487,7 +528,13 @@
   // ---------- Focus indicator → sidebar ----------
   function describe(el){
     const inMenu = el.closest('.menu');
-    if (inMenu){ fnRole.className='fn-role menu'; fnRole.textContent='Menu item'; fnName.textContent=el.dataset.label||el.textContent.trim(); fnHint.textContent='↑↓ move · Home/End ends · Enter runs · Esc closes'; return; }
+    if (inMenu){
+      const isPop = inMenu.getAttribute('role')==='group';
+      fnRole.className='fn-role menu'; fnRole.textContent = isPop ? 'Popover' : 'Menu item';
+      fnName.textContent = el.getAttribute('aria-label') || el.dataset.label || el.textContent.trim();
+      fnHint.textContent = isPop ? 'Tab between controls · Enter activates · Esc closes' : '↑↓ move · Home/End ends · Enter runs · Esc closes';
+      return;
+    }
     const tb = el.closest('[role="toolbar"]');
     if (tb){ fnRole.className='fn-role'; fnRole.textContent='In toolbar'; fnName.textContent=(el.dataset.kbdName||el.textContent.trim())+' — '+(tb.getAttribute('aria-label')||''); fnHint.textContent=(tb.dataset.tb==='v'?'↑↓':'←→')+' move · Home/End ends'+(el.getAttribute('aria-haspopup')?' · ↓/Enter opens its menu':''); return; }
     fnRole.className='fn-role'; fnRole.textContent = el.getAttribute('aria-haspopup') ? 'Menu button' : (el.tagName==='A'?'Link':'Button');
