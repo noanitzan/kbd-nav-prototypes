@@ -98,7 +98,13 @@
   .sec-panel .sp-sep { width: 1px; align-self: stretch; background: #E3E5E9; margin: 3px 4px; }
   .sec-panel .rbtn { width: 30px; height: 30px; }
   .floattools { margin-top: auto; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-  .askaria-float { position: absolute; right: 22px; bottom: 20px; z-index: 8; background: #fff; border: 1px solid #E3E5E9; border-radius: 22px; padding: 8px 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,.12); display: inline-flex; gap: 6px; }
+  .askaria-float { position: absolute; right: 16px; bottom: 14px; z-index: 8; background: transparent; border: 0; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+  .aa-label { position: relative; background: #fff; border-radius: 14px; padding: 12px 22px; font-weight: 700; font-size: 16px; color: #14243A; box-shadow: 0 5px 16px rgba(0,0,0,.14); }
+  .aa-label::after { content: ''; position: absolute; left: 12%; right: 12%; bottom: -2px; height: 7px; border-radius: 7px; background: linear-gradient(90deg, #74E0A0, #BFF0CE); filter: blur(4px); opacity: .85; }
+  .aa-avatar { width: 58px; height: 58px; border-radius: 50%; margin-right: 4px; position: relative; box-shadow: 0 5px 14px rgba(0,0,0,.28);
+    background: radial-gradient(circle at 40% 43%, #fff 0 4px, transparent 4.6px), radial-gradient(circle at 60% 43%, #fff 0 4px, transparent 4.6px), #0B0B0D; }
+  .aa-avatar::after { content: ''; position: absolute; left: 50%; top: 55%; transform: translateX(-50%); width: 15px; height: 7px; border: 2px solid #fff; border-top: 0; border-radius: 0 0 13px 13px; }
+  .askaria-float:focus-visible { outline: 3px solid #116DFF; outline-offset: 3px; border-radius: 16px; }
   body[data-screen="aria"] .askaria-float { display: none; }
 
   /* ---------- Menus (APG Menu) ---------- */
@@ -381,8 +387,12 @@
       </div>
     </div>
 
-    <!-- Ask Aria floating launcher — anchored to the editor's bottom-right corner (last Tab stop) -->
-    <button class="askaria-float" data-kbd-step="28" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
+    <!-- Ask Aria floating launcher — label pill + round avatar, bottom-right corner (last Tab stop).
+         One button; Enter / click opens the Aria assistant screen. -->
+    <button class="askaria-float" data-kbd-step="28" data-kbd-name="Ask Aria (assistant)" aria-label="Ask Aria" aria-haspopup="dialog">
+      <span class="aa-label">Ask Aria</span>
+      <span class="aa-avatar" aria-hidden="true"></span>
+    </button>
 
     <!-- ============ ARIA SCREEN — the Ask Aria assistant panel (shown on the "Aria" screen) ============
          A dialog. Tab order runs top→bottom: header actions → suggestion prompts → context chip →
@@ -638,7 +648,11 @@
   });
   // ---------- Plain buttons / links outcomes ----------
   function wireOutcome(sel, msg){ const el=app.querySelector(sel); if(el) el.addEventListener('click', ()=>toast(msg)); }
-  app.querySelectorAll('[data-kbd-name="Ask Aria"], [data-kbd-name="Ask Aria (assistant)"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — opens the Aria AI assistant (a separate panel). Focus moves into Aria; closing it returns focus here.')));
+  app.querySelectorAll('[data-kbd-name="Ask Aria"], [data-kbd-name="Ask Aria (assistant)"]').forEach(b=>b.addEventListener('click',()=>{
+    toast('Enter — opens the Aria assistant. Focus moves into the panel; Esc or ✕ returns to the editor.');
+    setScreen('aria');
+    const inp = document.getElementById('aria-input'); if (inp) inp.focus();
+  }));
   app.querySelectorAll('[data-kbd-name="Add Section"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — adds a new section below; focus moves to the new section on the stage.')));
   app.querySelectorAll('[data-kbd-name="Preview"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — enters Preview mode (a separate view).')));
   app.querySelectorAll('[data-kbd-name="Publish"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — opens the Publish flow / confirms publishing the site.')));
