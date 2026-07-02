@@ -182,7 +182,8 @@
         <ul>
           <li><strong>Mostly individual Tab stops.</strong> The top bar, +Add, browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) are each their own Tab stop, in order, before the Section (stops 1–25) — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>.</li>
           <li><strong>The section-actions bar (#13) is ONE APG Toolbar</strong> — a single Tab stop; <kbd>←</kbd>/<kbd>→</kbd> rove between its buttons (roving tabindex, clamps at the ends — no wrap), <kbd>Home</kbd>/<kbd>End</kbd> jump to the first/last. Its two menu-buttons (Change Layout, Replace Background) still open their menus with <kbd>↓</kbd>/<kbd>Enter</kbd> — a menu-button nested in a toolbar. Badged 13a (blue, the Tab stop) · 13b–13h (green, arrow-reachable) — <code>APG Toolbar</code>.</li>
-          <li><strong>The Section is the one drill-in container (stop 33).</strong> <kbd>Enter</kbd> (or a mouse click) goes inside; Tab/Shift+Tab then move between its <strong>elements</strong> (trapped + wrapping). Merely Tab-<em>focusing</em> the Section does not enter it. <kbd>Esc</kbd> exits back to the Section. Keeps the page content out of the top-level Tab order — <code>2.1.2 No Keyboard Trap</code> (Esc always exits). (Mouse click = Enter throughout.)</li>
+          <li><strong>The Section is the one drill-in container (stop 26).</strong> <kbd>Enter</kbd> (or a mouse click) goes inside; Tab/Shift+Tab then move between its <strong>elements</strong> and its <strong>action-bar buttons</strong> (trapped + wrapping, badged purple). Merely Tab-<em>focusing</em> the Section does not enter it. <kbd>Esc</kbd> exits back to the Section. Keeps the page content out of the top-level Tab order — <code>2.1.2 No Keyboard Trap</code> (Esc always exits). (Mouse click = Enter throughout.)</li>
+          <li><strong>The Section action bar (top-right) is keyboard-reachable.</strong> It appears only while the Section is selected <em>and</em> has content on the stage (an empty section shows no bar); its buttons (Section background · Duplicate · Section layouts · Ask Aria) are Tab stops <em>inside</em> the drill-in, activated with <kbd>Enter</kbd> — so they're operable by keyboard, not just mouse — <code>2.1.1 Keyboard</code>. (In the live editor this floating bar is mouse-only.)</li>
           <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
           <li><strong>Menu buttons</strong> (▾): open on Enter / Space / ↓ (focus first item), ↑ opens at last item. Menus <em>wrap</em> with ↑↓. Esc closes and returns focus to the button — <code>2.1.2 No Keyboard Trap</code>, <code>4.1.2 Name, Role, Value</code> (<code>aria-haspopup</code>, <code>aria-expanded</code>).</li>
           <li><strong>Nothing opens on focus</strong> — only on activation — <code>3.2.1 On Focus</code>.</li>
@@ -281,13 +282,14 @@
 
             <!-- Section's own floating panel — shown while the Section is selected,
                  hidden the moment an element inside is selected. -->
+            <!-- Section action bar (top-right) — appears only while the Section is selected AND has
+                 content; its buttons are Tab stops INSIDE the Section drill-in (purple 26d…). -->
             <div class="sec-panel" id="sec-panel" role="group" aria-label="Section actions" hidden>
-              <button class="rbtn" tabindex="-1" aria-label="Section background" title="Section background">🖥</button>
-              <button class="rbtn" tabindex="-1" aria-label="AI tools" title="AI tools">✦</button>
-              <button class="rbtn" tabindex="-1" aria-label="Duplicate section" title="Duplicate section">↻</button>
-              <button class="rbtn" tabindex="-1" aria-label="Section layouts" title="Section layouts">▦</button>
+              <button class="rbtn" tabindex="-1" data-secact aria-label="Section background" title="Section background">🖥</button>
+              <button class="rbtn" tabindex="-1" data-secact aria-label="Duplicate section" title="Duplicate section">↻</button>
+              <button class="rbtn" tabindex="-1" data-secact aria-label="Section layouts" title="Section layouts">▦</button>
               <span class="sp-sep"></span>
-              <button class="cbtn" tabindex="-1">✦ Ask Aria</button>
+              <button class="cbtn" tabindex="-1" data-secact aria-label="Ask Aria">✦ Ask Aria</button>
             </div>
 
             <!-- "The relevant menu above" — element action bar (shown when an element is selected) -->
@@ -303,7 +305,7 @@
             <!-- Floating small menu, anchored to the selected element -->
             <div class="el-floatmenu" id="el-floatmenu" role="group" aria-label="Quick actions" hidden></div>
 
-            <div class="stage-note">Section — <strong>Enter</strong> to go inside; then <strong>Tab</strong> / <strong>Shift+Tab</strong> move between its elements; <strong>Enter</strong> selects one (opens its action bar + floating menu) · <strong>Esc</strong> exits</div>
+            <div class="stage-note">Section — <strong>Enter</strong> to go inside; then <strong>Tab</strong> / <strong>Shift+Tab</strong> move between its elements <em>and</em> its action-bar buttons (top-right); <strong>Enter</strong> selects an element or runs an action · <strong>Esc</strong> exits</div>
           </div>
 
           <button class="add-section" data-kbd-step="27" data-kbd-name="Add Section">＋ Add Section</button>
@@ -570,7 +572,7 @@
       }
     });
     // When drilled into the Section, badge its element Tab stops (23a, 23b, …).
-    if (insideSection){ els().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'p')); }
+    if (insideSection){ sectionInner().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'p')); }
   }
   function placeBadge(el, text, cls){
     const r = el.getBoundingClientRect(); if(r.width===0) return;
@@ -624,9 +626,10 @@
   // (its stop is focused, or we're browsing elements inside it) but NOT once an
   // element is selected — then the element's own bars take over.
   function updateSectionPanel(){
-    // The Section's panel shows only once the Section is SELECTED (Enter / mouse click),
-    // i.e. while inside the section with no element selected — NOT merely on Tab-focus.
-    secPanel.hidden = !(insideSection && !selectedEl);
+    // The Section's action bar shows only once the Section is SELECTED (Enter / mouse click) —
+    // while inside the section with no element selected (NOT merely on Tab-focus) — AND only
+    // when the section has content on the stage. An empty section shows no action bar.
+    secPanel.hidden = !(insideSection && !selectedEl && els().length>0);
   }
 
   // Per-element-type action sets shown in the action bar above.
@@ -638,6 +641,10 @@
   const EL_FLOAT = [['Edit','✎'],['AI tools','✦'],['Duplicate','⧉'],['More','⋯']];
 
   function els(){ return Array.from(sectionBox.querySelectorAll('[data-el]')).filter(el=>el.offsetParent!==null); }
+  // The Section's own action-bar buttons (top-right), reachable only while that bar is visible.
+  function secActs(){ return secPanel.hidden ? [] : Array.from(secPanel.querySelectorAll('[data-secact]')).filter(el=>el.offsetParent!==null); }
+  // Everything Tab-reachable inside the drilled-in Section: its elements, then its action-bar buttons.
+  function sectionInner(){ return [...els(), ...secActs()]; }
   // The Frame's controls (browser bar) come first, then its content elements.
   function frameCtls(){ return Array.from(app.querySelectorAll('[data-frame-ctl]')).filter(el=>el.offsetParent!==null); }
   function frameInner(){ return [...frameCtls(), ...els()]; }
@@ -645,9 +652,10 @@
   function deselectEl(){ selectedEl = null; els().forEach(x=>x.classList.remove('selected')); hideElBars(); updateSectionPanel(); }
   function enterSection(){
     insideSection = true; sectionBox.classList.add('entered'); selectedEl = null; hideElBars();
-    const seq = els(); if (seq.length) seq[0].focus();
-    updateSectionPanel(); renderBadges();
-    toast('Enter — inside the Section. Tab / Shift+Tab move between its elements; Enter selects one (opens its action bar + floating menu); Esc exits.');
+    updateSectionPanel();
+    const seq = sectionInner(); if (seq.length) seq[0].focus();
+    renderBadges();
+    toast('Enter — inside the Section. Tab / Shift+Tab move between its elements and its action-bar buttons (top-right); Enter selects an element or runs an action; Esc exits.');
   }
   function exitSection(){
     insideSection = false; sectionBox.classList.remove('entered'); deselectEl(); sectionBox.focus();
@@ -685,21 +693,29 @@
     if (e.key==='Tab'){
       e.preventDefault();
       if (selectedEl){ deselectEl(); renderBadges(); }
-      const list = els(); if(!list.length) return;
+      const list = sectionInner(); if(!list.length) return;
       let i = list.indexOf(document.activeElement);
       i = (i + (e.shiftKey?-1:1) + list.length) % list.length;
       list[i].focus();
-      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(list[i].dataset.kbdName||list[i].getAttribute('aria-label')||list[i].textContent.trim())+' (element, inside the Section)');
+      const isAct = list[i].hasAttribute('data-secact');
+      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(list[i].dataset.kbdName||list[i].getAttribute('aria-label')||list[i].textContent.trim())+(isAct?' (section action, inside the Section)':' (element, inside the Section)'));
       return;
     }
     if (e.key==='Enter' || e.key===' '){
       const el = document.activeElement.closest('[data-el]');
-      if (el){ e.preventDefault(); selectElement(el); }
-      // Frame controls (Page menu / device toggles / Connect Domain) handle Enter themselves
+      if (el){ e.preventDefault(); selectElement(el); return; }
+      const act = document.activeElement.closest('[data-secact]');
+      if (act){ e.preventDefault(); act.click(); }
     }
   }, true);
   // Mouse click = Enter. Clicking an element selects it (entering the section first if needed).
   app.querySelectorAll('[data-el]').forEach(el=> el.addEventListener('click', (e)=>{ e.stopPropagation(); if(!insideSection) enterSection(); selectElement(el); }));
+  // Section action-bar buttons — click = Enter: run the action (focus stays on the button).
+  secPanel.querySelectorAll('[data-secact]').forEach(b=> b.addEventListener('click', (e)=>{ e.stopPropagation();
+    const name = b.getAttribute('aria-label') || b.textContent.trim();
+    if (/Ask Aria/i.test(name)) toast('Enter — opens the Aria AI assistant (a separate panel). Focus moves into Aria; closing it returns focus here.');
+    else toast('Enter — “'+name+'” (a section-level action). Focus stays on the button.');
+  }));
   // Clicking the section background = Enter on the Section stop (select the section → panel shows).
   sectionBox.addEventListener('click', (e)=>{
     if (e.target.closest('[data-el]') || e.target.closest('.sec-panel') || e.target.closest('.el-actionbar') || e.target.closest('.el-floatmenu')) return;
