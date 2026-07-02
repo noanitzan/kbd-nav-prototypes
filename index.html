@@ -161,8 +161,8 @@
         <div><kbd>↑</kbd> (on a ▾ button) — open its menu at the last item</div>
         <div><kbd>Esc</kbd> — close the menu, focus returns to the button</div>
         <div><kbd>Enter</kbd> (in a menu) — run the item, close, return focus</div>
-        <div><kbd>Enter</kbd> (on the <strong>Section</strong>) — edit inside: focus moves to the first element</div>
-        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> (inside) — move between the elements (trapped in the section)</div>
+        <div><kbd>Enter</kbd> (on the <strong>Frame</strong>) — enter it: focus moves to its first control (Page)</div>
+        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> (inside the Frame) — walk its controls (Page · Connect Domain · Desktop · Mobile) then its content elements (trapped)</div>
         <div><kbd>Enter</kbd> (on an <strong>element</strong>) — select it: opens its <strong>action bar above</strong> + a <strong>floating menu</strong> on it</div>
         <div><kbd>Esc</kbd> — deselect the element (close its bars); again → exit the section</div>
       </div>
@@ -179,8 +179,8 @@
         <ul>
           <li><strong>Top app bar = individual Tab stops.</strong> Every top-bar control (WIX, account, site, Brand, zoom, Upgrade, Undo, Redo, Save, Preview, Publish) is its own Tab stop — Tab moves between them, no arrow keys. A top bar of top-level controls reads better as discrete Tab stops than as one roving toolbar — <code>2.4.3 Focus Order</code>.</li>
           <li><strong>Two clusters ARE toolbars — one Tab stop (roving tabindex):</strong> the section-actions bar and the left rail. Tab in once, arrows move inside; Tabbing back returns to the last-focused control; arrows clamp at the ends (no wrap) — <code>2.1.1 Keyboard</code>. The top bar, device toggle, and bottom-left panels are individual Tab stops instead.</li>
-          <li><strong>Stage stops come LAST.</strong> All the surrounding chrome is tabbed first; the stage's own controls (the Section, then Add Section) sit at the end so keyboard users traverse the frame, then reach the canvas — <code>2.4.3 Focus Order</code>.</li>
-          <li><strong>The Section is a drill-in container.</strong> It's ONE Tab stop; <kbd>Enter</kbd> (or a mouse click) <em>selects</em> it — that's when its floating panel appears — and moves focus inside, where Tab/Shift+Tab move between the <strong>elements</strong> (trapped + wrapping). Merely Tab-<em>focusing</em> the Section does not select it or show the panel. <kbd>Esc</kbd> exits back to the Section. Keeps the huge stage out of the top-level Tab order — <code>2.1.1</code>, <code>2.1.2 No Keyboard Trap</code>, <code>2.4.3</code>. (Mouse click = Enter throughout.)</li>
+          <li><strong>The Frame is the first "stage".</strong> Its own controls — Page · Connect Domain · Desktop · Mobile — are NOT in the top-level Tab order; you reach them only after <em>choosing the Frame</em>. All surrounding editor chrome is tabbed first (stops 1–18), then the Frame (19) and Add Section (20) — <code>2.4.3 Focus Order</code>.</li>
+          <li><strong>The Frame is a drill-in container.</strong> It's ONE Tab stop; <kbd>Enter</kbd> (or a mouse click) <em>chooses</em> it and moves focus inside, where Tab/Shift+Tab walk its controls (Page/Connect Domain/Desktop/Mobile) then its content elements (trapped + wrapping). Merely Tab-<em>focusing</em> the Frame does not choose it. <kbd>Esc</kbd> exits back to the Frame. Keeps the whole page out of the top-level Tab order — <code>2.1.1</code>, <code>2.1.2 No Keyboard Trap</code>, <code>2.4.3</code>. (Mouse click = Enter throughout.)</li>
           <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
           <li><strong>Menu buttons</strong> (▾): open on Enter / Space / ↓ (focus first item), ↑ opens at last item. Menus <em>wrap</em> with ↑↓. Esc closes and returns focus to the button — <code>2.1.2 No Keyboard Trap</code>, <code>4.1.2 Name, Role, Value</code> (<code>aria-haspopup</code>, <code>aria-expanded</code>).</li>
           <li><strong>Nothing opens on focus</strong> — only on activation — <code>3.2.1 On Focus</code>.</li>
@@ -238,17 +238,17 @@
     <div class="frame">
       <div class="framebar">
         <span class="dots">● ● ●</span>
-        <button class="cbtn" data-kbd-step="14" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
-        <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-kbd-step="15" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
+        <button class="cbtn" data-frame-ctl tabindex="-1" data-kbd-name="Page: products" aria-haspopup="menu" aria-expanded="false" data-menu="page">Page: products ▾</button>
+        <span class="url">noani0.wixsite.com/my-site-73 &nbsp; <a href="#" class="cbtn ghost" style="padding:2px 6px" data-frame-ctl tabindex="-1" data-kbd-name="Connect Domain" onclick="return false">Connect Domain</a></span>
         <div class="device" role="group" aria-label="Preview device">
-          <button class="dtoggle" data-kbd-step="16" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
-          <button class="dtoggle" data-kbd-step="17" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
+          <button class="dtoggle" data-frame-ctl tabindex="-1" data-kbd-name="Desktop view" aria-pressed="true" aria-label="Desktop view">🖥</button>
+          <button class="dtoggle" data-frame-ctl tabindex="-1" data-kbd-name="Mobile view" aria-pressed="false" aria-label="Mobile view">📱</button>
         </div>
       </div>
 
       <div class="canvas">
         <!-- (7) Left rail -->
-        <div class="rail" role="toolbar" aria-label="Section tools" aria-orientation="vertical" data-tb="v" data-kbd-step="18" data-kbd-name="Left rail toolbar">
+        <div class="rail" role="toolbar" aria-label="Section tools" aria-orientation="vertical" data-tb="v" data-kbd-step="14" data-kbd-name="Left rail toolbar">
           <button class="rbtn" data-kbd-sub data-kbd-name="Layers" aria-label="Layers">▤</button>
           <button class="rbtn" data-kbd-sub data-kbd-name="Move up" aria-label="Move section up">↑</button>
           <button class="rbtn" data-kbd-sub data-kbd-name="Move down" aria-label="Move section down">↓</button>
@@ -258,18 +258,18 @@
         <div class="stage">
           <!-- Bottom-left floating panels — each its OWN Tab stop (not a toolbar) -->
           <div class="floattools" role="group" aria-label="Editor panels">
-            <button class="rbtn" data-kbd-step="19" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
-            <button class="rbtn" data-kbd-step="20" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
-            <button class="rbtn" data-kbd-step="21" data-kbd-name="Help" aria-label="Help">?</button>
+            <button class="rbtn" data-kbd-step="15" data-kbd-name="Layers panel" aria-label="Layers panel">▦</button>
+            <button class="rbtn" data-kbd-step="16" data-kbd-name="Grid lines" aria-label="Grid lines">⊞</button>
+            <button class="rbtn" data-kbd-step="17" data-kbd-name="Help" aria-label="Help">?</button>
           </div>
 
           <!-- Ask Aria floating assistant -->
-          <button class="askaria-float" data-kbd-step="22" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
+          <button class="askaria-float" data-kbd-step="18" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
 
           <!-- STAGE (last): the Section is ONE Tab stop; Enter drills IN and Tab
                cycles its toolbar + elements (trapped); Esc exits. Element-level
                keyboard is a later phase. -->
-          <div class="section-box" role="group" aria-label="Section" tabindex="0" data-kbd-step="23" data-kbd-name="Section — Enter to edit inside">
+          <div class="section-box" role="group" aria-label="Frame" tabindex="0" data-kbd-step="19" data-kbd-name="Frame — Enter to enter">
             <span class="section-tag">Section</span>
 
             <!-- Section's own floating panel — shown while the Section is selected,
@@ -296,10 +296,10 @@
             <!-- Floating small menu, anchored to the selected element -->
             <div class="el-floatmenu" id="el-floatmenu" role="group" aria-label="Quick actions" hidden></div>
 
-            <div class="stage-note">Section — <strong>Enter</strong> to edit inside; then <strong>Tab</strong> between elements, <strong>Enter</strong> selects one (opens its action bar above + floating menu) · <strong>Esc</strong> deselects, then exits</div>
+            <div class="stage-note">Frame — <strong>Enter</strong> to choose it; then <strong>Tab</strong> through its controls (Page · Connect Domain · Desktop · Mobile) then its elements; <strong>Enter</strong> uses a control or selects an element · <strong>Esc</strong> exits</div>
           </div>
 
-          <button class="add-section" data-kbd-step="24" data-kbd-name="Add Section">＋ Add Section</button>
+          <button class="add-section" data-kbd-step="20" data-kbd-name="Add Section">＋ Add Section</button>
         </div>
       </div>
     </div>
@@ -563,7 +563,7 @@
       }
     });
     // When drilled into the Section, badge its element Tab stops (23a, 23b, …).
-    if (insideSection){ els().forEach((it,i)=> placeBadge(it, '23'+letter(i), 'g')); }
+    if (insideSection){ frameInner().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'g')); }
   }
   function placeBadge(el, text, cls){
     const r = el.getBoundingClientRect(); if(r.width===0) return;
@@ -631,18 +631,21 @@
   const EL_FLOAT = [['Edit','✎'],['AI tools','✦'],['Duplicate','⧉'],['More','⋯']];
 
   function els(){ return Array.from(sectionBox.querySelectorAll('[data-el]')).filter(el=>el.offsetParent!==null); }
+  // The Frame's controls (browser bar) come first, then its content elements.
+  function frameCtls(){ return Array.from(app.querySelectorAll('[data-frame-ctl]')).filter(el=>el.offsetParent!==null); }
+  function frameInner(){ return [...frameCtls(), ...els()]; }
   function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; }
   function deselectEl(){ selectedEl = null; els().forEach(x=>x.classList.remove('selected')); hideElBars(); updateSectionPanel(); }
   function enterSection(){
     insideSection = true; sectionBox.classList.add('entered'); selectedEl = null; hideElBars();
-    const e = els(); if (e.length) e[0].focus();
+    const seq = frameInner(); if (seq.length) seq[0].focus();
     updateSectionPanel(); renderBadges();
-    toast('Enter — inside the section (its panel stays). Tab / Shift+Tab move between the elements; Enter selects one; Esc deselects, then exits.');
+    toast('Enter — inside the Frame. Tab / Shift+Tab walk its controls (Page, Connect Domain, Desktop, Mobile) then its content elements; Enter uses a control or selects an element; Esc exits.');
   }
   function exitSection(){
     insideSection = false; sectionBox.classList.remove('entered'); deselectEl(); sectionBox.focus();
     updateSectionPanel(); renderBadges();
-    toast('Esc — exited the section; focus returns to the Section (Tab stop 23).');
+    toast('Esc — exited the Frame; focus returns to the Frame (Tab stop 19).');
   }
   function selectElement(el){
     selectedEl = el;
@@ -665,25 +668,27 @@
   // Inside the section (trapped): Tab moves between elements, Enter selects, Esc deselects then exits.
   document.addEventListener('keydown', (e)=>{
     if (!insideSection) return;
+    if (openMenu) return;   // a Frame control's menu (e.g. Page) is open — let the menu handle keys
     if (e.key==='Escape'){
       e.preventDefault();
-      if (selectedEl){ deselectEl(); renderBadges(); toast('Esc — element deselected; its action bar + floating menu close. Tab to browse elements; Esc again exits the section.'); }
+      if (selectedEl){ deselectEl(); renderBadges(); toast('Esc — element deselected; its action bar + floating menu close. Tab to keep browsing the Frame; Esc again exits the Frame.'); }
       else exitSection();
       return;
     }
     if (e.key==='Tab'){
       e.preventDefault();
       if (selectedEl){ deselectEl(); renderBadges(); }
-      const list = els(); if(!list.length) return;
+      const list = frameInner(); if(!list.length) return;
       let i = list.indexOf(document.activeElement);
       i = (i + (e.shiftKey?-1:1) + list.length) % list.length;
       list[i].focus();
-      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(list[i].dataset.kbdName||list[i].textContent.trim())+' (element, trapped in section)');
+      log((e.shiftKey?'⇧Tab':'Tab')+' — '+(list[i].dataset.kbdName||list[i].getAttribute('aria-label')||list[i].textContent.trim())+' (inside the Frame)');
       return;
     }
     if (e.key==='Enter' || e.key===' '){
       const el = document.activeElement.closest('[data-el]');
       if (el){ e.preventDefault(); selectElement(el); }
+      // Frame controls (Page menu / device toggles / Connect Domain) handle Enter themselves
     }
   }, true);
   // Mouse click = Enter. Clicking an element selects it (entering the section first if needed).
