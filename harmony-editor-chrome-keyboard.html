@@ -21,7 +21,7 @@
   .kbd-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-top: 12px; }
   .legend-row { display: flex; align-items: center; gap: 10px; margin: 7px 0; font-size: 12.5px; }
   .badge-demo { width: 20px; height: 20px; border-radius: 50%; flex: 0 0 auto; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-  .badge-demo.b { background: #116DFF; } .badge-demo.g { background: #0B8043; }
+  .badge-demo.b { background: #116DFF; } .badge-demo.g { background: #0B8043; } .badge-demo.p { background: #8B3DFF; }
   .keymap { font-size: 12.5px; line-height: 1.7; }
   .keymap kbd { background: #F0F1F3; border: 1px solid #D9DBE1; border-radius: 4px; padding: 1px 6px; font-family: inherit; font-size: 11px; }
   #kbd-log { font-size: 12px; line-height: 1.5; max-height: 190px; overflow-y: auto; }
@@ -119,7 +119,7 @@
 
   /* ---------- Tab-order badges ---------- */
   .kbd-badge { position: absolute; z-index: 450; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 10px; color: #fff; font-size: 10.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.3); transform: translate(-40%,-40%); }
-  .kbd-badge.b { background: #116DFF; } .kbd-badge.g { background: #0B8043; }
+  .kbd-badge.b { background: #116DFF; } .kbd-badge.g { background: #0B8043; } .kbd-badge.p { background: #8B3DFF; }
   body.no-badges .kbd-badge { display: none; }
 
   /* Tooltip — must appear on keyboard FOCUS, not just hover (WCAG 1.4.13). */
@@ -149,7 +149,8 @@
     <div class="kbd-card">
       <h2>Badges</h2>
       <div class="legend-row"><span class="badge-demo b">1</span> Blue = a <strong>Tab stop</strong> (Tab reaches it)</div>
-      <div class="legend-row"><span class="badge-demo g">13b</span> Green = <strong>arrow-reachable</strong> — inside the #13 toolbar (← →), or inside the Section after Enter</div>
+      <div class="legend-row"><span class="badge-demo g">13b</span> Green = <strong>arrow-reachable</strong> inside the #13 toolbar (← →)</div>
+      <div class="legend-row"><span class="badge-demo p">26a</span> Purple = <strong>Tab-reachable inside the Section</strong> (Tab / ⇧Tab, after Enter)</div>
     </div>
 
     <div class="kbd-card">
@@ -569,7 +570,7 @@
       }
     });
     // When drilled into the Section, badge its element Tab stops (23a, 23b, …).
-    if (insideSection){ els().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'g')); }
+    if (insideSection){ els().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'p')); }
   }
   function placeBadge(el, text, cls){
     const r = el.getBoundingClientRect(); if(r.width===0) return;
