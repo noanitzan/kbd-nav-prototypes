@@ -122,6 +122,33 @@
   .kbd-badge.b { background: #116DFF; } .kbd-badge.g { background: #0B8043; } .kbd-badge.p { background: #8B3DFF; }
   body.no-badges .kbd-badge { display: none; }
 
+  /* Section-actions bar (#13) as a flex row (was inline style) */
+  .s-actions { display: flex; align-items: center; gap: 4px; }
+
+  /* ----- Prototype "Screen" switcher (author meta-nav, not part of the demo) ----- */
+  .screens-card { background: #0E1B2C; color: #fff; }
+  .screens-card h2 { color: #9DB2CC; }
+  .screen-switch { display: flex; gap: 4px; background: #1B2C42; border-radius: 10px; padding: 4px; }
+  .screen-btn { flex: 1; border: 0; background: transparent; color: #C7D3E3; font: inherit; font-size: 12px; font-weight: 600; padding: 7px 6px; border-radius: 7px; cursor: pointer; }
+  .screen-btn:hover { background: #26385180; }
+  .screen-btn[aria-selected="true"] { background: #116DFF; color: #fff; }
+  .screen-btn:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+  .screen-hint { font-size: 11.5px; color: #9DB2CC; margin-top: 8px; line-height: 1.4; }
+
+  /* ----- Screen states: hide the section-dependent chrome on the empty/aria screens ----- */
+  body[data-screen="blank"] .s-actions,
+  body[data-screen="blank"] .rail,
+  body[data-screen="blank"] .section-box,
+  body[data-screen="blank"] .add-section,
+  body[data-screen="aria"]  .s-actions,
+  body[data-screen="aria"]  .rail,
+  body[data-screen="aria"]  .section-box,
+  body[data-screen="aria"]  .add-section { display: none !important; }
+  /* Empty-stage placeholder note */
+  .stage-empty { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; color: #B6BECC; font-size: 13px; padding: 24px; pointer-events: none; }
+  body[data-screen="blank"] .stage-empty.for-blank,
+  body[data-screen="aria"]  .stage-empty.for-aria { display: flex; }
+
   /* Tooltip — must appear on keyboard FOCUS, not just hover (WCAG 1.4.13). */
   .kbd-tip { position: absolute; z-index: 1500; background: #1D2230; color: #fff; font-size: 12px; padding: 5px 9px; border-radius: 6px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.3); display: none; }
   .kbd-tip.show { display: block; }
@@ -136,6 +163,16 @@
 </head>
 <body>
   <aside class="kbd-sidebar">
+    <div class="kbd-card screens-card">
+      <h2>Screen</h2>
+      <div class="screen-switch" role="tablist" aria-label="Prototype screen">
+        <button class="screen-btn" role="tab" data-screen="blank" aria-selected="false">Blank</button>
+        <button class="screen-btn" role="tab" data-screen="elements" aria-selected="true">With elements</button>
+        <button class="screen-btn" role="tab" data-screen="aria" aria-selected="false">Aria</button>
+      </div>
+      <div class="screen-hint" id="screen-hint">The editor with a Section and elements on the stage.</div>
+    </div>
+
     <div class="kbd-card">
       <h2>Harmony editor — keyboard (chrome)</h2>
       <div class="focus-now">
@@ -223,7 +260,7 @@
       </span>
       <!-- Section-actions bar = ONE APG toolbar (one Tab stop, ← → rove between items, clamp at ends);
            the two menu-buttons inside still open their menus with ↓/Enter. -->
-      <div style="display:flex;align-items:center;gap:4px" role="toolbar" aria-label="Section actions" data-kbd-step="13" data-kbd-name="Section actions toolbar">
+      <div class="s-actions" role="toolbar" aria-label="Section actions" data-kbd-step="13" data-kbd-name="Section actions toolbar">
         <button class="cbtn" data-kbd-sub data-kbd-name="Ask Aria">✦ Ask Aria</button>
         <span class="sep"></span>
         <button class="cbtn" data-kbd-sub data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
@@ -271,6 +308,10 @@
         </div>
 
         <div class="stage">
+          <!-- Empty-stage placeholders (shown on the Blank / Aria screens) -->
+          <div class="stage-empty for-blank">Empty page — no section on the stage yet. The contextual section toolbar, the left section-tools rail, and the Section box only appear once a section exists. Tab through the base chrome (top bar, + Add, page bar, panels, Ask Aria).</div>
+          <div class="stage-empty for-aria"><strong>Aria screen — coming.</strong><br>Attach the Ask Aria panel design and I'll build its keyboard model (focus into the panel, field order, Esc to return).</div>
+
           <!-- Ask Aria floating assistant -->
           <button class="askaria-float" data-kbd-step="25" data-kbd-name="Ask Aria (assistant)">✦ Ask Aria</button>
 
@@ -559,11 +600,17 @@
   // ---------- Tab-order badges ----------
   const badgeLayer = document.createElement('div'); document.body.appendChild(badgeLayer);
   function letter(i){ return String.fromCharCode(97+i); }
+  // Numbering is DYNAMIC: only VISIBLE stops are counted, renumbered gaplessly in
+  // Tab order — so each screen (Blank / With elements / Aria) shows a correct 1..N.
+  let stepNumOf = new Map();
   function renderBadges(){
     badgeLayer.innerHTML='';
-    const stops = Array.from(app.querySelectorAll('[data-kbd-step]')).sort((a,b)=>(+a.dataset.kbdStep)-(+b.dataset.kbdStep));
-    stops.forEach(stop=>{
-      const n = stop.dataset.kbdStep;
+    stepNumOf = new Map();
+    const stops = Array.from(app.querySelectorAll('[data-kbd-step]'))
+      .filter(el=>el.offsetParent!==null)
+      .sort((a,b)=>(+a.dataset.kbdStep)-(+b.dataset.kbdStep));
+    stops.forEach((stop,idx)=>{
+      const n = idx+1; stepNumOf.set(stop, n);
       const subs = Array.from(stop.querySelectorAll('[data-kbd-sub]')).filter(el=>el.offsetParent!==null);
       if (subs.length){
         subs.forEach((it,i)=> placeBadge(it, n+letter(i), i===0?'b':'g'));
@@ -571,8 +618,8 @@
         placeBadge(stop, n, 'b');
       }
     });
-    // When drilled into the Section, badge its element Tab stops (23a, 23b, …).
-    if (insideSection){ sectionInner().forEach((it,i)=> placeBadge(it, sectionBox.dataset.kbdStep+letter(i), 'p')); }
+    // When drilled into the Section, badge its inner Tab stops (Na, Nb, …) purple.
+    if (insideSection){ const sn = stepNumOf.get(sectionBox); sectionInner().forEach((it,i)=> placeBadge(it, sn+letter(i), 'p')); }
   }
   function placeBadge(el, text, cls){
     const r = el.getBoundingClientRect(); if(r.width===0) return;
@@ -660,7 +707,7 @@
   function exitSection(){
     insideSection = false; sectionBox.classList.remove('entered'); deselectEl(); sectionBox.focus();
     updateSectionPanel(); renderBadges();
-    toast('Esc — exited the Section; focus returns to the Section (Tab stop 26).');
+    toast('Esc — exited the Section; focus returns to the Section (Tab stop '+(stepNumOf.get(sectionBox)||'')+').');
   }
   function selectElement(el){
     selectedEl = el;
@@ -722,9 +769,35 @@
     if (!insideSection) enterSection();
   });
 
+  // ---------- Prototype screen switcher (author meta-nav) ----------
+  const SCREEN_HINTS = {
+    blank:    'Empty page — no section yet. Only the base chrome is present; the section toolbar, section-tools rail, Section box and Add-Section are gone.',
+    elements: 'The editor with a Section and elements on the stage (Heading · Image · Button) — the full keyboard model.',
+    aria:     'Placeholder — the Ask Aria panel. Attach its design and I’ll build the keyboard model (focus into the panel, field order, Esc to return).'
+  };
+  const screenHint = document.getElementById('screen-hint');
+  function setScreen(s){
+    if (insideSection) exitSection();
+    document.body.setAttribute('data-screen', s);
+    document.querySelectorAll('.screen-btn').forEach(b=> b.setAttribute('aria-selected', b.dataset.screen===s ? 'true':'false'));
+    if (screenHint) screenHint.textContent = SCREEN_HINTS[s] || '';
+    // Reset roving toolbars so the first item is the Tab stop again after visibility changes.
+    app.querySelectorAll('[role="toolbar"]').forEach(initToolbar);
+    renderBadges();
+  }
+  document.querySelectorAll('.screen-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> setScreen(btn.dataset.screen));
+    btn.addEventListener('keydown', (e)=>{   // roving arrows across the 3 screen tabs
+      const tabs=[...document.querySelectorAll('.screen-btn')]; let i=tabs.indexOf(btn);
+      if (e.key==='ArrowRight'||e.key==='ArrowDown'){ e.preventDefault(); tabs[(i+1)%tabs.length].focus(); }
+      else if (e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); tabs[(i-1+tabs.length)%tabs.length].focus(); }
+    });
+  });
+
   // ---------- Init ----------
   buildMenus();
   app.querySelectorAll('[role="toolbar"]').forEach(initToolbar);
+  setScreen('elements');
   requestAnimationFrame(renderBadges);
   setTimeout(renderBadges, 200);
 })();
