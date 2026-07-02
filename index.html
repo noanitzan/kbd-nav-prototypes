@@ -623,7 +623,9 @@
   function toolbarItems(tb){ return Array.from(tb.querySelectorAll('[data-kbd-sub]')).filter(el=>!el.disabled && el.offsetParent!==null); }
   function initToolbar(tb){
     const its = toolbarItems(tb); if(!its.length) return;
-    its.forEach((it,i)=> it.tabIndex = i===0?0:-1);
+    its.forEach((it,i)=> it.tabIndex = i===0?0:-1);   // reset roving tabindex (safe to repeat)
+    if (tb._tbInit) return;   // listeners already bound — don't stack duplicates (they'd double-step the arrows)
+    tb._tbInit = true;
     const vert = tb.dataset.tb==='v';
     tb.addEventListener('keydown', (e)=>{
       const list = toolbarItems(tb); let i = list.indexOf(document.activeElement); if(i<0) return;
