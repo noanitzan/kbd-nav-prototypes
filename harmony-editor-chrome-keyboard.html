@@ -479,7 +479,9 @@
       </div>
       <a href="#" class="pub-connect" data-kbd-step="52" data-kbd-name="Connect a custom domain" onclick="return false">Connect a custom domain</a>
       <div class="pub-actions">
-        <button class="pub-publish" data-kbd-step="53" data-kbd-name="Publish (confirm)">Publish</button>
+        <!-- data-kbd-step 50 = first in the popover's tab order: the primary action leads,
+             even though it's last in the DOM (deliberate focus order for a confirm dialog). -->
+        <button class="pub-publish" data-kbd-step="50" data-kbd-name="Publish (confirm)">Publish</button>
       </div>
       <div class="pub-footer">You’re responsible for verifying the accuracy and legality of the published content, including AI-generated content.</div>
     </div>
@@ -713,13 +715,13 @@
   app.querySelectorAll('[data-kbd-name="Preview"]').forEach(b=>b.addEventListener('click',()=>toast('Enter — enters Preview mode (a separate view).')));
   // ---------- Publish popover (a dialog opened from the Publish button #11) ----------
   let publishOpener = null;
-  function publishStops(){ return Array.from(publishPop.querySelectorAll('[data-kbd-step]')).filter(el=>el.offsetParent!==null); }
+  function publishStops(){ return Array.from(publishPop.querySelectorAll('[data-kbd-step]')).filter(el=>el.offsetParent!==null).sort((a,b)=>(+a.dataset.kbdStep)-(+b.dataset.kbdStep)); }
   function openPublish(opener){
     publishOpener = opener || null;
     publishOpen = true; publishPop.hidden = false; publishBackdrop.hidden = false;
     renderBadges();
     const s = publishStops(); if (s.length) s[0].focus();
-    toast('Enter — opens the Publish popover. Tab cycles View Site → Connect a custom domain → Publish; Esc closes and returns focus to the Publish button.');
+    toast('Enter — opens the Publish popover; focus lands on the primary action (Publish). Tab cycles Publish → View Site → Connect a custom domain; Esc closes and returns focus to the Publish button.');
   }
   function closePublish(returnFocus){
     if (!publishOpen) return;
