@@ -78,7 +78,8 @@
   .els { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; }
   .stage-el { border: 2px solid transparent; border-radius: 10px; padding: 10px 18px; background: transparent; cursor: pointer; font-size: 16px; font-family: inherit; color: #20303C; }
   .stage-el.heading { font-size: 26px; font-weight: 800; }
-  .stage-el.button { background: #116DFF; color: #fff; border-radius: 22px; font-weight: 600; }
+  .els-row { display: flex; align-items: center; justify-content: center; gap: 24px; }
+  .stage-el.button { background: #116DFF; color: #fff; border-radius: 20px; font-weight: 600; font-size: 14px; padding: 7px 18px; }
   .stage-el.image { font-size: 15px; }
   .stage-el.selected { border-color: transparent; }   /* the selection frame is drawn by .el-selbox */
   /* ----- Selection chrome (name label + resize/rotate handles) ----- */
@@ -409,8 +410,10 @@
             <!-- Elements on the stage — the inner Tab stops -->
             <div class="els">
               <button class="stage-el heading" data-el data-eltype="heading" tabindex="-1" data-kbd-name="Heading element">Heading</button>
-              <button class="stage-el image"   data-el data-eltype="image"   tabindex="-1" data-kbd-name="Image element" aria-label="Image element">🩷 Image</button>
-              <button class="stage-el button"  data-el data-eltype="button"  tabindex="-1" data-kbd-name="Button element">Button</button>
+              <div class="els-row">
+                <button class="stage-el image"   data-el data-eltype="image"   tabindex="-1" data-kbd-name="Image element" aria-label="Image element">🩷 Image</button>
+                <button class="stage-el button"  data-el data-eltype="button"  tabindex="-1" data-kbd-name="Button element">Button</button>
+              </div>
             </div>
 
             <!-- Floating small menu, anchored to the selected element -->
