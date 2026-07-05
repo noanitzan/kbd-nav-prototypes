@@ -142,7 +142,7 @@
   body.no-badges .kbd-badge { display: none; }
 
   /* Section-actions bar (#13) as a flex row (was inline style) */
-  .s-actions { display: flex; align-items: center; gap: 4px; }
+  .s-actions { display: none; align-items: center; gap: 4px; }   /* contextual — shown only while the Section is selected */
 
   /* ----- Prototype "Screen" switcher (author meta-nav, not part of the demo) ----- */
   .screens-card { background: #0E1B2C; color: #fff; }
@@ -253,7 +253,7 @@
       <div class="focus-now">
         <span class="fn-role idle" id="fn-role">No focus</span>
         <div class="fn-name" id="fn-name">Press Tab to enter the editor</div>
-        <div class="fn-hint" id="fn-hint">Individual Tab stops · #13 section-actions = one toolbar (← →) · Section: Enter to go inside</div>
+        <div class="fn-hint" id="fn-hint">Individual Tab stops · action bars appear on selection · Section: Enter to go inside</div>
       </div>
       <label class="kbd-toggle"><input type="checkbox" id="badge-toggle" checked> Show Tab-order badges</label>
     </div>
@@ -261,15 +261,13 @@
     <div class="kbd-card">
       <h2>Badges</h2>
       <div class="legend-row"><span class="badge-demo b">1</span> Blue = a <strong>Tab stop</strong> (Tab reaches it)</div>
-      <div class="legend-row"><span class="badge-demo g">13b</span> Green = <strong>arrow-reachable</strong> inside the #13 toolbar (← →)</div>
       <div class="legend-row"><span class="badge-demo p">26a</span> Purple = <strong>Tab-reachable inside the Section</strong> (Tab / ⇧Tab, after Enter)</div>
     </div>
 
     <div class="kbd-card">
       <h2>Keys</h2>
       <div class="keymap">
-        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> — next / previous Tab stop (most controls individual; #13 section-actions is one toolbar)</div>
-        <div><kbd>←</kbd> <kbd>→</kbd> — move within the #13 section-actions toolbar (clamps at the ends)</div>
+        <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> — next / previous Tab stop (every control is its own stop)</div>
         <div><kbd>↑</kbd> <kbd>↓</kbd> — move within an open menu</div>
         <div><kbd>Home</kbd> <kbd>End</kbd> — first / last control in a toolbar or menu</div>
         <div><kbd>Enter</kbd> <kbd>Space</kbd> <kbd>↓</kbd> — open a ▾ menu (focus first item)</div>
@@ -293,8 +291,8 @@
       <details class="notes">
         <summary>Focus-management &amp; WCAG 2.2 AA notes</summary>
         <ul>
-          <li><strong>Mostly individual Tab stops.</strong> The top bar, +Add, browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) are each their own Tab stop, in order, before the Section (stops 1–25) — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>.</li>
-          <li><strong>The section-actions bar (#13) is ONE APG Toolbar</strong> — a single Tab stop; <kbd>←</kbd>/<kbd>→</kbd> rove between its buttons (roving tabindex, clamps at the ends — no wrap), <kbd>Home</kbd>/<kbd>End</kbd> jump to the first/last. Its two menu-buttons (Change Layout, Replace Background) still open their menus with <kbd>↓</kbd>/<kbd>Enter</kbd> — a menu-button nested in a toolbar. Badged 13a (blue, the Tab stop) · 13b–13h (green, arrow-reachable) — <code>APG Toolbar</code>.</li>
+          <li><strong>Individual Tab stops.</strong> The top bar, +Add, browser-bar controls (Page · Connect Domain · Desktop · Mobile), the left rail, and the bottom-left panels (both in the left gutter <em>outside</em> the browser frame, as in the real editor) are each their own Tab stop, in order, before the Section — <code>2.4.3 Focus Order</code>, <code>2.1.1 Keyboard</code>.</li>
+          <li><strong>The top action bar is contextual</strong> — nothing shows at the top when nothing is selected (like the Blank screen). Selecting the <strong>Section</strong> (Enter) reveals its <strong>section-actions bar</strong>; selecting an <strong>element</strong> reveals that element's <strong>action bar</strong> in the same spot. Operating those bars by keyboard is a later phase, so they carry no Tab-order badge yet — matching the real editor, where the contextual toolbar appears only on selection.</li>
           <li><strong>The Section is the one drill-in container (stop 26).</strong> <kbd>Enter</kbd> (or a mouse click) goes inside; Tab/Shift+Tab then move between its <strong>elements</strong> and its <strong>action-bar buttons</strong> (trapped + wrapping, badged purple). Merely Tab-<em>focusing</em> the Section does not enter it. <kbd>Esc</kbd> exits back to the Section. Keeps the page content out of the top-level Tab order — <code>2.1.2 No Keyboard Trap</code> (Esc always exits). (Mouse click = Enter throughout.)</li>
           <li><strong>The Section action bar (top-right) is keyboard-reachable.</strong> It appears only while the Section is selected <em>and</em> has content on the stage (an empty section shows no bar); its buttons (Section background · Duplicate · Section layouts · Ask Aria) are Tab stops <em>inside</em> the drill-in, activated with <kbd>Enter</kbd> — so they're operable by keyboard, not just mouse — <code>2.1.1 Keyboard</code>. (In the live editor this floating bar is mouse-only.)</li>
           <li><strong>Selecting an element</strong> (<kbd>Enter</kbd> on it) opens two surfaces at once, matching the product: the <strong>action bar above</strong> (its type-specific menu — a heading, image, and button each get different actions) and a <strong>floating small menu</strong> anchored to the element. <kbd>Esc</kbd> deselects and closes both. Operating those two bars by keyboard is the next phase.</li>
@@ -334,21 +332,21 @@
       <span class="addbtn-wrap">
         <button class="cbtn" style="border:1px solid #E3E5E9" data-kbd-step="12" data-kbd-name="Add elements" aria-haspopup="menu" aria-expanded="false" data-menu="add">＋ Add</button>
       </span>
-      <!-- Section-actions bar = ONE APG toolbar (one Tab stop, ← → rove between items, clamp at ends);
-           the two menu-buttons inside still open their menus with ↓/Enter. -->
-      <div class="s-actions" role="toolbar" aria-label="Section actions" data-kbd-step="13" data-kbd-name="Section actions toolbar">
-        <button class="cbtn" data-kbd-sub data-kbd-name="Ask Aria">✦ Ask Aria</button>
+      <!-- Section-actions bar — CONTEXTUAL: shown only while the Section is selected (not a permanent
+           Tab stop). Its buttons are tabindex=-1; operating it by keyboard is a later phase. -->
+      <div class="s-actions" role="toolbar" aria-label="Section actions">
+        <button class="cbtn" tabindex="-1" data-kbd-name="Ask Aria">✦ Ask Aria</button>
         <span class="sep"></span>
-        <button class="cbtn" data-kbd-sub data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
-        <button class="cbtn" data-kbd-sub data-kbd-name="Replace Background" aria-haspopup="menu" aria-expanded="false" data-menu="bg">◯ Replace Background ▾</button>
+        <button class="cbtn" tabindex="-1" data-kbd-name="Change Layout" aria-haspopup="menu" aria-expanded="false" data-menu="layout">⊞ Change Layout ▾</button>
+        <button class="cbtn" tabindex="-1" data-kbd-name="Replace Background" aria-haspopup="menu" aria-expanded="false" data-menu="bg">◯ Replace Background ▾</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-sub data-kbd-name="Effects" aria-label="Effects">▦</button>
-        <button class="cbtn icon" data-kbd-sub data-kbd-name="Arrange layout" aria-label="Arrange layout">≡</button>
-        <button class="cbtn icon" data-kbd-sub data-kbd-name="Section background" aria-label="Section background">▭</button>
+        <button class="cbtn icon" tabindex="-1" data-kbd-name="Effects" aria-label="Effects">▦</button>
+        <button class="cbtn icon" tabindex="-1" data-kbd-name="Arrange layout" aria-label="Arrange layout">≡</button>
+        <button class="cbtn icon" tabindex="-1" data-kbd-name="Section background" aria-label="Section background">▭</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-sub data-kbd-name="Search" aria-label="Search">⌕</button>
+        <button class="cbtn icon" tabindex="-1" data-kbd-name="Search" aria-label="Search">⌕</button>
         <span class="sep"></span>
-        <button class="cbtn icon" data-kbd-sub data-kbd-name="Help" aria-label="Help">?</button>
+        <button class="cbtn icon" tabindex="-1" data-kbd-name="Help" aria-label="Help">?</button>
       </div>
       <!-- Element action bar — replaces the section-actions bar at the TOP while a stage element is selected -->
       <div class="el-actionbar" id="el-actionbar" role="toolbar" aria-label="Element actions" hidden></div>
@@ -876,7 +874,11 @@
     // The Section's action bar shows only once the Section is SELECTED (Enter / mouse click) —
     // while inside the section with no element selected (NOT merely on Tab-focus) — AND only
     // when the section has content on the stage. An empty section shows no action bar.
-    secPanel.hidden = !(insideSection && !selectedEl && els().length>0);
+    const sectionSelected = insideSection && !selectedEl;
+    secPanel.hidden = !(sectionSelected && els().length>0);
+    // Top contextual action bar: section-actions while the Section is selected; nothing otherwise
+    // (the element action bar is shown separately when an element is selected).
+    if (sActions) sActions.style.display = sectionSelected ? 'flex' : 'none';
   }
 
   // Per-element-type action sets shown in the action bar above.
@@ -895,7 +897,7 @@
   // The Frame's controls (browser bar) come first, then its content elements.
   function frameCtls(){ return Array.from(app.querySelectorAll('[data-frame-ctl]')).filter(el=>el.offsetParent!==null); }
   function frameInner(){ return [...frameCtls(), ...els()]; }
-  function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; selBox.hidden = true; if(sActions) sActions.style.display=''; }
+  function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; selBox.hidden = true; }
   function deselectEl(){ selectedEl = null; els().forEach(x=>x.classList.remove('selected')); hideElBars(); updateSectionPanel(); }
   function enterSection(){
     insideSection = true; sectionBox.classList.add('entered'); selectedEl = null; hideElBars();
@@ -915,7 +917,6 @@
     const type = el.dataset.eltype, acts = EL_ACTIONS[type] || ['Settings'];
     elActionbar.innerHTML = '<span class="eatype">'+type+'</span>' + acts.map(a=>'<button class="eabtn" tabindex="-1">'+a+'</button>').join('');
     elActionbar.hidden = false;
-    if (sActions) sActions.style.display = 'none';   // element actions replace the section-actions bar at the top
     elFloat.innerHTML = EL_FLOAT.map(([name,ic])=>'<button class="fmbtn" tabindex="-1" aria-label="'+name+'" title="'+name+'">'+ic+'</button>').join('');
     elFloat.hidden = false;
     document.getElementById('sel-name').textContent = (el.dataset.kbdName||'').replace(/ element$/,'');
