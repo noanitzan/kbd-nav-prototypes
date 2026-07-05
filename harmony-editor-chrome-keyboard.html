@@ -96,7 +96,7 @@
   .sel-h.w { left: -4px; } .sel-h.e { right: -4px; }
   .sel-rot { position: absolute; right: -34px; top: 50%; transform: translateY(-50%); width: 22px; height: 22px; border-radius: 50%; background: #116DFF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 6px rgba(0,0,0,.22); }
   /* "The relevant menu above" — element action bar, docked at the top of the section */
-  .el-actionbar { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 2px; background: #fff; color: #20303C; border: 1px solid #E3E5E9; border-radius: 10px; padding: 5px 6px; box-shadow: 0 8px 24px rgba(0,0,0,.16); z-index: 7; white-space: nowrap; }
+  .el-actionbar { flex: 1; display: flex; align-items: center; gap: 4px; margin-left: 84px; color: #20303C; white-space: nowrap; overflow: hidden; }
   .el-actionbar[hidden] { display: none; }
   .el-actionbar .eabtn { background: transparent; border: 0; color: #20303C; font-size: 13px; font-weight: 600; padding: 6px 10px; border-radius: 7px; cursor: pointer; font-family: inherit; }
   .el-actionbar .eabtn:hover { background: #F0F1F3; }
@@ -279,6 +279,7 @@
         <div><kbd>Enter</kbd> (on the <strong>Section</strong>) — go inside: focus moves to the first element</div>
         <div><kbd>Tab</kbd> <kbd>⇧Tab</kbd> (inside the Section) — move between its elements (trapped, wrapping)</div>
         <div><kbd>Enter</kbd> (on an <strong>element</strong>) — select it: opens its <strong>action bar above</strong> + a <strong>floating menu</strong> on it</div>
+        <div><kbd>←</kbd> <kbd>↑</kbd> <kbd>→</kbd> <kbd>↓</kbd> (element <strong>selected</strong>) — move it on the stage (⇧ + arrow = fine 1px) · <code>2.5.7</code></div>
         <div><kbd>Esc</kbd> — deselect the element (close its bars); again → exit the section</div>
       </div>
     </div>
@@ -349,6 +350,8 @@
         <span class="sep"></span>
         <button class="cbtn icon" data-kbd-sub data-kbd-name="Help" aria-label="Help">?</button>
       </div>
+      <!-- Element action bar — replaces the section-actions bar at the TOP while a stage element is selected -->
+      <div class="el-actionbar" id="el-actionbar" role="toolbar" aria-label="Element actions" hidden></div>
     </div>
 
     <!-- Editor body: the left gutter (rail + tools) sits OUTSIDE the browser frame, as in the real editor -->
@@ -404,9 +407,6 @@
               <button class="cbtn" tabindex="-1" data-secact aria-label="Ask Aria">✦ Ask Aria</button>
             </div>
 
-            <!-- "The relevant menu above" — element action bar (shown when an element is selected) -->
-            <div class="el-actionbar" id="el-actionbar" role="toolbar" aria-label="Element actions" hidden></div>
-
             <!-- Elements on the stage — the inner Tab stops -->
             <div class="els">
               <button class="stage-el heading" data-el data-eltype="heading" tabindex="-1" data-kbd-name="Heading element">Heading</button>
@@ -427,7 +427,7 @@
               <span class="sel-rot">↺</span>
             </div>
 
-            <div class="stage-note">Section — <strong>Enter</strong> to go inside; then <strong>Tab</strong> / <strong>Shift+Tab</strong> move between its elements <em>and</em> its action-bar buttons (top-right); <strong>Enter</strong> selects an element or runs an action · <strong>Esc</strong> exits</div>
+            <div class="stage-note">Section — <strong>Enter</strong> to go inside; <strong>Tab</strong> / <strong>Shift+Tab</strong> move between elements &amp; action-bar buttons; <strong>Enter</strong> selects; <strong>arrow keys</strong> move a selected element on the stage (⇧ = 1px) · <strong>Esc</strong> exits</div>
           </div>
 
           <button class="add-section" data-kbd-step="27" data-kbd-name="Add Section">＋ Add Section</button>
@@ -863,6 +863,7 @@
   // and Esc exits back out to the Section. Element-level keyboard is a later phase.
   const sectionBox = app.querySelector('.section-box');
   const elActionbar = document.getElementById('el-actionbar');
+  const sActions = app.querySelector('.s-actions');   // #13 section-actions bar (top row)
   const elFloat = document.getElementById('el-floatmenu');
   const selBox = document.getElementById('el-selbox');
   const secPanel = document.getElementById('sec-panel');
@@ -894,7 +895,7 @@
   // The Frame's controls (browser bar) come first, then its content elements.
   function frameCtls(){ return Array.from(app.querySelectorAll('[data-frame-ctl]')).filter(el=>el.offsetParent!==null); }
   function frameInner(){ return [...frameCtls(), ...els()]; }
-  function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; selBox.hidden = true; }
+  function hideElBars(){ elActionbar.hidden = true; elFloat.hidden = true; selBox.hidden = true; if(sActions) sActions.style.display=''; }
   function deselectEl(){ selectedEl = null; els().forEach(x=>x.classList.remove('selected')); hideElBars(); updateSectionPanel(); }
   function enterSection(){
     insideSection = true; sectionBox.classList.add('entered'); selectedEl = null; hideElBars();
@@ -914,21 +915,32 @@
     const type = el.dataset.eltype, acts = EL_ACTIONS[type] || ['Settings'];
     elActionbar.innerHTML = '<span class="eatype">'+type+'</span>' + acts.map(a=>'<button class="eabtn" tabindex="-1">'+a+'</button>').join('');
     elActionbar.hidden = false;
+    if (sActions) sActions.style.display = 'none';   // element actions replace the section-actions bar at the top
     elFloat.innerHTML = EL_FLOAT.map(([name,ic])=>'<button class="fmbtn" tabindex="-1" aria-label="'+name+'" title="'+name+'">'+ic+'</button>').join('');
     elFloat.hidden = false;
+    document.getElementById('sel-name').textContent = (el.dataset.kbdName||'').replace(/ element$/,'');
+    selBox.hidden = false;
+    positionSelChrome(el);   // place the frame, handles, floating menu on the element
+    updateSectionPanel();   // element now selected → the Section's own panel disappears
+    renderBadges();
+    toast('Enter — “'+el.dataset.kbdName+'” selected. Its action bar opens above + a floating menu on it. Arrow keys move it on the stage (⇧ + arrow = 1px). Esc deselects.');
+  }
+  // Position the selection frame + handles + floating menu over the element's current box.
+  function positionSelChrome(el){
     const sb = sectionBox.getBoundingClientRect(), r = el.getBoundingClientRect();
     elFloat.style.left = Math.max(6, r.right - sb.left - elFloat.offsetWidth) + 'px';
-    elFloat.style.top  = Math.max(30, r.top - sb.top - 58) + 'px';   // sits above the name label
-    // Selection chrome: frame the element with its name + resize/rotate handles
+    elFloat.style.top  = Math.max(30, r.top - sb.top - 58) + 'px';
     selBox.style.left = (r.left - sb.left) + 'px';
     selBox.style.top  = (r.top  - sb.top)  + 'px';
     selBox.style.width  = r.width  + 'px';
     selBox.style.height = r.height + 'px';
-    document.getElementById('sel-name').textContent = (el.dataset.kbdName||'').replace(/ element$/,'');
-    selBox.hidden = false;
-    updateSectionPanel();   // element now selected → the Section's own panel disappears
-    renderBadges();
-    toast('Enter — “'+el.dataset.kbdName+'” selected. The section’s panel disappears; the element’s action bar opens above and a floating menu appears on it. (Navigating into those bars is the next phase.)');
+  }
+  // Nudge the selected element on the stage with arrow keys (keyboard alternative to dragging — WCAG 2.5.7).
+  function nudgeElement(el, dxStep, dyStep){
+    const dx = (+el.dataset.dx || 0) + dxStep, dy = (+el.dataset.dy || 0) + dyStep;
+    el.dataset.dx = dx; el.dataset.dy = dy;
+    el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    positionSelChrome(el); renderBadges();
   }
   sectionBox.addEventListener('keydown', (e)=>{
     if (!insideSection && (e.key==='Enter' || e.key===' ') && e.target===sectionBox){ e.preventDefault(); enterSection(); }
@@ -941,6 +953,16 @@
       e.preventDefault();
       if (selectedEl){ deselectEl(); renderBadges(); toast('Esc — element deselected; its action bar + floating menu close. Tab to keep browsing elements; Esc again exits the Section.'); }
       else exitSection();
+      return;
+    }
+    // Arrow keys move the SELECTED element on the stage (⇧ = fine 1px step).
+    if (selectedEl && (e.key==='ArrowUp'||e.key==='ArrowDown'||e.key==='ArrowLeft'||e.key==='ArrowRight')){
+      e.preventDefault();
+      const step = e.shiftKey ? 1 : 8;
+      const dx = (e.key==='ArrowLeft'?-step : e.key==='ArrowRight'? step : 0);
+      const dy = (e.key==='ArrowUp'?  -step : e.key==='ArrowDown'?  step : 0);
+      nudgeElement(selectedEl, dx, dy);
+      log(e.key.replace('Arrow','')+' — moved “'+(selectedEl.dataset.kbdName||'').replace(/ element$/,'')+'” '+step+'px (arrow = move on stage)');
       return;
     }
     if (e.key==='Tab'){
